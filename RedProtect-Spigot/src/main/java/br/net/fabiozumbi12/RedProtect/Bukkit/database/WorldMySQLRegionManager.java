@@ -30,7 +30,7 @@ import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
-import br.net.fabiozumbi12.RedProtect.Core.region.PlayerRegion;
+import br.net.fabiozumbi12.RedProtect.Core.region.RedPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -274,9 +274,9 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 RedProtect.get().logger.debug(LogLevel.DEFAULT, "Load Region: " + rs.getString("name") + ", World: " + this.world.getName());
-                Set<PlayerRegion<String, String>> leaders = new HashSet<>();
-                Set<PlayerRegion<String, String>> admins = new HashSet<>();
-                Set<PlayerRegion<String, String>> members = new HashSet<>();
+                Set<RedPlayer<String, String>> leaders = new HashSet<>();
+                Set<RedPlayer<String, String>> admins = new HashSet<>();
+                Set<RedPlayer<String, String>> members = new HashSet<>();
                 HashMap<String, Object> flags = new HashMap<>();
 
                 int maxMbrX = rs.getInt("maxMbrX");
@@ -303,19 +303,19 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
                 for (String member : rs.getString("members").split(", ")) {
                     if (member.length() > 0) {
                         String[] p = member.split("@");
-                        members.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                        members.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                     }
                 }
                 for (String admin : rs.getString("admins").split(", ")) {
                     if (admin.length() > 0) {
                         String[] p = admin.split("@");
-                        admins.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                        admins.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                     }
                 }
                 for (String leader : rs.getString("leaders").split(", ")) {
                     if (leader.length() > 0) {
                         String[] p = leader.split("@");
-                        leaders.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                        leaders.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                     }
                 }
 
@@ -390,9 +390,9 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
                 st.setString(2, this.world.getName());
                 ResultSet rs = st.executeQuery();
                 if (rs.next()) {
-                    Set<PlayerRegion<String, String>> leaders = new HashSet<>();
-                    Set<PlayerRegion<String, String>> admins = new HashSet<>();
-                    Set<PlayerRegion<String, String>> members = new HashSet<>();
+                    Set<RedPlayer<String, String>> leaders = new HashSet<>();
+                    Set<RedPlayer<String, String>> admins = new HashSet<>();
+                    Set<RedPlayer<String, String>> members = new HashSet<>();
                     HashMap<String, Object> flags = new HashMap<>();
 
                     int maxMbrX = rs.getInt("maxMbrX");
@@ -424,7 +424,7 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
                             p[0] = RPUtil.PlayerToUUID(p[0]);
                             RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
                         }
-                        members.add(new PlayerRegion<>(p[0], p[1]));
+                        members.add(new RedPlayer<>(p[0], p[1]));
                     }
 
                     for (String admin : rs.getString("admins").split(", ")) {
@@ -435,7 +435,7 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
                             p[0] = RPUtil.PlayerToUUID(p[0]);
                             RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
                         }
-                        admins.add(new PlayerRegion<>(p[0], p[1]));
+                        admins.add(new RedPlayer<>(p[0], p[1]));
                     }
                     for (String leader : rs.getString("leaders").split(", ")) {
                         String[] pi = leader.split("@");
@@ -445,7 +445,7 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
                             p[0] = RPUtil.PlayerToUUID(p[0]);
                             RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
                         }
-                        leaders.add(new PlayerRegion<>(p[0], p[1]));
+                        leaders.add(new RedPlayer<>(p[0], p[1]));
                     }
 
                     for (String flag : rs.getString("flags").split(",")) {

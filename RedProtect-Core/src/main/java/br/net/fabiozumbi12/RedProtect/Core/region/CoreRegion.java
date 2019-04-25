@@ -40,9 +40,9 @@ public class CoreRegion implements Serializable {
     protected int maxY;
     protected int prior;
     protected String name;
-    protected Set<PlayerRegion<String, String>> leaders;
-    protected Set<PlayerRegion<String, String>> admins;
-    protected Set<PlayerRegion<String, String>> members;
+    protected Set<RedPlayer<String, String>> leaders;
+    protected Set<RedPlayer<String, String>> admins;
+    protected Set<RedPlayer<String, String>> members;
     protected String wMessage;
     protected String world;
     protected String date;
@@ -71,7 +71,7 @@ public class CoreRegion implements Serializable {
      * @param tppoint    Teleport Point
      * @param tppointYaw Teleport Pitch and Yam
      */
-    public CoreRegion(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int[] minLoc, int[] maxLoc, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
+    public CoreRegion(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int[] minLoc, int[] maxLoc, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
         this.name = name;
         this.maxMbrX = maxLoc[0];
         this.minMbrX = minLoc[0];
@@ -121,7 +121,7 @@ public class CoreRegion implements Serializable {
      * @param tppoint    Teleport Point
      * @param tppointYaw Teleport Pitch and Yam
      */
-    public CoreRegion(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int maxMbrX, int minMbrX, int maxMbrZ, int minMbrZ, int minY, int maxY, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
+    public CoreRegion(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int maxMbrX, int minMbrX, int maxMbrZ, int minMbrZ, int minY, int maxY, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
         this.name = name;
         this.maxMbrX = maxMbrX;
         this.minMbrX = minMbrX;
@@ -172,7 +172,7 @@ public class CoreRegion implements Serializable {
      * @param tppoint    Teleport Point
      * @param tppointYaw Teleport Pitch and Yam
      */
-    public CoreRegion(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int[] x, int[] z, int miny, int maxy, int prior, String worldName, String date, Map<String, Object> flags, String welcome, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
+    public CoreRegion(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int[] x, int[] z, int miny, int maxy, int prior, String worldName, String date, Map<String, Object> flags, String welcome, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
         this.name = name;
         this.prior = prior;
         this.world = worldName;
@@ -227,7 +227,7 @@ public class CoreRegion implements Serializable {
         this.minY = min[1];
         this.admins = new HashSet<>();
         this.members = new HashSet<>();
-        this.leaders = Collections.singleton(new PlayerRegion<>(defLeader, defLeader));
+        this.leaders = Collections.singleton(new RedPlayer<>(defLeader, defLeader));
         this.flags = defFlags;
         this.canDelete = true;
         this.world = world;
@@ -324,10 +324,10 @@ public class CoreRegion implements Serializable {
      * <p>
      * To check if a player can build on this region use {@code canBuild(p)} instead this method.
      *
-     * @return {@code Set<PlayerRegion<String, String>>}
+     * @return {@code Set<RedPlayer<String, String>>}
      */
     @Deprecated
-    public Set<PlayerRegion<String, String>> getAdmins() {
+    public Set<RedPlayer<String, String>> getAdmins() {
         return this.admins;
     }
 
@@ -336,10 +336,10 @@ public class CoreRegion implements Serializable {
      * <p>
      * To check if a player can build on this region use {@code canBuild(Player p)} instead this method.
      *
-     * @return {@code Set<PlayerRegion<String, String>>}
+     * @return {@code Set<RedPlayer<String, String>>}
      */
     @Deprecated
-    public Set<PlayerRegion<String, String>> getMembers() {
+    public Set<RedPlayer<String, String>> getMembers() {
         return this.members;
     }
 
@@ -348,10 +348,10 @@ public class CoreRegion implements Serializable {
      * <p>
      * To check if a player can build on this region use {@code canBuild(Player p)} instead this method.
      *
-     * @return {@code Set<PlayerRegion<String, String>>}
+     * @return {@code Set<RedPlayer<String, String>>}
      */
     @Deprecated
-    public Set<PlayerRegion<String, String>> getLeaders() {
+    public Set<RedPlayer<String, String>> getLeaders() {
         return this.leaders;
     }
 
@@ -452,7 +452,7 @@ public class CoreRegion implements Serializable {
         return this.value;
     }
 
-    protected String serializeMembers(Set<PlayerRegion<String, String>> pairs) {
+    protected String serializeMembers(Set<RedPlayer<String, String>> pairs) {
         StringBuilder list = new StringBuilder();
         pairs.forEach(l -> list.append(",").append(l.getUUID()).append("@").append(l.getPlayerName()));
         return list.length() > 0 ? list.toString().substring(1) : "";
@@ -460,7 +460,7 @@ public class CoreRegion implements Serializable {
 
 
     public boolean sameLeaders(CoreRegion r) {
-        for (PlayerRegion<String, String> l : this.leaders) {
+        for (RedPlayer<String, String> l : this.leaders) {
             if (r.leaders.contains(l)) {
                 return true;
             }

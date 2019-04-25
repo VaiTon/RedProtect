@@ -24,9 +24,8 @@
  * 3 - Este aviso não pode ser removido ou alterado de qualquer distribuição de origem.
  */
 
-package br.net.fabiozumbi12.RedProtect.Core.config.Category;
+package br.net.fabiozumbi12.RedProtect.Core.config.category;
 
-import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 

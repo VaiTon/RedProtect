@@ -27,10 +27,9 @@
 package br.net.fabiozumbi12.RedProtect.Bukkit.config;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
-import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.FlagGuiCategory;
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.GlobalFlagsCategory;
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.MainCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.FlagGuiCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.GlobalFlagsCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.MainCategory;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
@@ -39,7 +38,10 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;

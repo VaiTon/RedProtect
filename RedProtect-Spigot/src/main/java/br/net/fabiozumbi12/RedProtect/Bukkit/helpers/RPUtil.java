@@ -28,14 +28,13 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.helpers;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Bukkit.ents.RPBukkitBlocks;
 import br.net.fabiozumbi12.RedProtect.Bukkit.ents.RPBukkitEntities;
 import br.net.fabiozumbi12.RedProtect.Bukkit.ents.TaskChain;
 import br.net.fabiozumbi12.RedProtect.Bukkit.hooks.WEHook;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.CoreUtil;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
-import br.net.fabiozumbi12.RedProtect.Core.region.PlayerRegion;
+import br.net.fabiozumbi12.RedProtect.Core.region.RedPlayer;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.*;
@@ -506,9 +505,9 @@ public class RPUtil extends CoreUtil {
                 st.setString(1, world.getName());
                 ResultSet rs = st.executeQuery();
                 while (rs.next()) {
-                    Set<PlayerRegion<String, String>> leaders = new HashSet<>();
-                    Set<PlayerRegion<String, String>> admins = new HashSet<>();
-                    Set<PlayerRegion<String, String>> members = new HashSet<>();
+                    Set<RedPlayer<String, String>> leaders = new HashSet<>();
+                    Set<RedPlayer<String, String>> admins = new HashSet<>();
+                    Set<RedPlayer<String, String>> members = new HashSet<>();
                     HashMap<String, Object> flags = new HashMap<>();
 
                     int maxMbrX = rs.getInt("maxMbrX");
@@ -533,19 +532,19 @@ public class RPUtil extends CoreUtil {
                     for (String member : rs.getString("members").split(", ")) {
                         if (member.length() > 0) {
                             String[] p = member.split("@");
-                            members.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                            members.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                         }
                     }
                     for (String admin : rs.getString("admins").split(", ")) {
                         if (admin.length() > 0) {
                             String[] p = admin.split("@");
-                            admins.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                            admins.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                         }
                     }
                     for (String leader : rs.getString("leaders").split(", ")) {
                         if (leader.length() > 0) {
                             String[] p = leader.split("@");
-                            leaders.add(new PlayerRegion<>(p[0], p.length == 2 ? p[1] : p[0]));
+                            leaders.add(new RedPlayer<>(p[0], p.length == 2 ? p[1] : p[0]));
                         }
                     }
 
@@ -892,8 +891,8 @@ public class RPUtil extends CoreUtil {
                 if (RedProtect.get().config.configRoot().online_mode && claim.ownerID != null) {
                     pname = claim.ownerID.toString();
                 }
-                Set<PlayerRegion<String, String>> leaders = new HashSet<>();
-                leaders.add(new PlayerRegion<>(claim.ownerID != null ? claim.ownerID.toString() : pname, pname));
+                Set<RedPlayer<String, String>> leaders = new HashSet<>();
+                leaders.add(new RedPlayer<>(claim.ownerID != null ? claim.ownerID.toString() : pname, pname));
                 Location newmin = claim.getGreaterBoundaryCorner();
                 Location newmax = claim.getLesserBoundaryCorner();
                 newmin.setY(0);
@@ -943,7 +942,7 @@ public class RPUtil extends CoreUtil {
         String name = fileDB.getString(rname + ".name");
         String serverName = RedProtect.get().config.configRoot().region_settings.default_leader;
 
-        Set<PlayerRegion<String, String>> leaders = new HashSet<>(fileDB.getStringList(rname + ".leaders")).stream().map(s -> {
+        Set<RedPlayer<String, String>> leaders = new HashSet<>(fileDB.getStringList(rname + ".leaders")).stream().map(s -> {
             String[] pi = s.split("@");
             String[] p = new String[]{pi[0], pi.length == 2 ? pi[1] : pi[0]};
             if (RedProtect.get().config.configRoot().online_mode && !RPUtil.isUUIDs(p[0]) && !p[0].equalsIgnoreCase(serverName)) {
@@ -951,10 +950,10 @@ public class RPUtil extends CoreUtil {
                 p[0] = RPUtil.PlayerToUUID(p[0]);
                 RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
             }
-            return new PlayerRegion<>(p[0], p[1]);
+            return new RedPlayer<>(p[0], p[1]);
         }).collect(Collectors.toSet());
 
-        Set<PlayerRegion<String, String>> admins = new HashSet<>(fileDB.getStringList(rname + ".admins")).stream().map(s -> {
+        Set<RedPlayer<String, String>> admins = new HashSet<>(fileDB.getStringList(rname + ".admins")).stream().map(s -> {
             String[] pi = s.split("@");
             String[] p = new String[]{pi[0], pi.length == 2 ? pi[1] : pi[0]};
             if (RedProtect.get().config.configRoot().online_mode && !RPUtil.isUUIDs(p[0]) && !p[0].equalsIgnoreCase(serverName)) {
@@ -962,10 +961,10 @@ public class RPUtil extends CoreUtil {
                 p[0] = RPUtil.PlayerToUUID(p[0]);
                 RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
             }
-            return new PlayerRegion<>(p[0], p[1]);
+            return new RedPlayer<>(p[0], p[1]);
         }).collect(Collectors.toSet());
 
-        Set<PlayerRegion<String, String>> members = new HashSet<>(fileDB.getStringList(rname + ".members")).stream().map(s -> {
+        Set<RedPlayer<String, String>> members = new HashSet<>(fileDB.getStringList(rname + ".members")).stream().map(s -> {
             String[] pi = s.split("@");
             String[] p = new String[]{pi[0], pi.length == 2 ? pi[1] : pi[0]};
             if (RedProtect.get().config.configRoot().online_mode && !RPUtil.isUUIDs(p[0]) && !p[0].equalsIgnoreCase(serverName)) {
@@ -973,7 +972,7 @@ public class RPUtil extends CoreUtil {
                 p[0] = RPUtil.PlayerToUUID(p[0]);
                 RedProtect.get().logger.success("Updated region " + rname + ", player &6" + before + " &ato &6" + p[0]);
             }
-            return new PlayerRegion<>(p[0], p[1]);
+            return new RedPlayer<>(p[0], p[1]);
         }).collect(Collectors.toSet());
 
         String welcome = fileDB.getString(rname + ".welcome", "");

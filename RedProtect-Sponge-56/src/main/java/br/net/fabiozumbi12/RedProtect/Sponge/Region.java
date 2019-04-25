@@ -27,8 +27,7 @@
 package br.net.fabiozumbi12.RedProtect.Sponge;
 
 import br.net.fabiozumbi12.RedProtect.Core.region.CoreRegion;
-import br.net.fabiozumbi12.RedProtect.Core.region.PlayerRegion;
-import br.net.fabiozumbi12.RedProtect.Sponge.config.LangManager;
+import br.net.fabiozumbi12.RedProtect.Core.region.RedPlayer;
 import br.net.fabiozumbi12.RedProtect.Sponge.events.ChangeRegionFlagEvent;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPEconomy;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
@@ -81,7 +80,7 @@ public class Region extends CoreRegion {
      * @param tppoint   Teleport Point
      * @param candel    Can delete?
      */
-    public Region(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int[] minLoc, int[] maxLoc, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, Location tppoint, boolean candel) {
+    public Region(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int[] minLoc, int[] maxLoc, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, Location tppoint, boolean candel) {
         super(name, admins, members, leaders, minLoc, maxLoc, flags, wMessage, prior, worldName, date, value, tppoint == null ? null : new int[]{tppoint.getBlockX(), tppoint.getBlockY(), tppoint.getBlockZ()}, tppoint == null ? null : new float[]{0, 0}, candel);
         checkParticle();
     }
@@ -108,7 +107,7 @@ public class Region extends CoreRegion {
      * @param tppoint   Teleport Point
      * @param candel    Can delete?
      */
-    public Region(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int maxMbrX, int minMbrX, int maxMbrZ, int minMbrZ, int minY, int maxY, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, Location tppoint, boolean candel) {
+    public Region(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int maxMbrX, int minMbrX, int maxMbrZ, int minMbrZ, int minY, int maxY, HashMap<String, Object> flags, String wMessage, int prior, String worldName, String date, long value, Location tppoint, boolean candel) {
         super(name, admins, members, leaders, maxMbrX, minMbrX, maxMbrZ, minMbrZ, minY, maxY, flags, wMessage, prior, worldName, date, value, tppoint == null ? null : new int[]{tppoint.getBlockX(), tppoint.getBlockY(), tppoint.getBlockZ()}, tppoint == null ? null : new float[]{0, 0}, candel);
         checkParticle();
     }
@@ -133,7 +132,7 @@ public class Region extends CoreRegion {
      * @param tppoint   Teleport Point
      * @param candel    Can delete?
      */
-    public Region(String name, Set<PlayerRegion<String, String>> admins, Set<PlayerRegion<String, String>> members, Set<PlayerRegion<String, String>> leaders, int[] x, int[] z, int miny, int maxy, int prior, String worldName, String date, Map<String, Object> flags, String welcome, long value, Location tppoint, boolean candel) {
+    public Region(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int[] x, int[] z, int miny, int maxy, int prior, String worldName, String date, Map<String, Object> flags, String welcome, long value, Location tppoint, boolean candel) {
         super(name, admins, members, leaders, x, z, miny, maxy, prior, worldName, date, flags, welcome, value, tppoint == null ? null : new int[]{tppoint.getBlockX(), tppoint.getBlockY(), tppoint.getBlockZ()}, tppoint == null ? null : new float[]{0, 0}, candel);
         checkParticle();
     }
@@ -338,19 +337,19 @@ public class Region extends CoreRegion {
         return this.dynmapSet;
     }
 
-    public void setAdmins(Set<PlayerRegion<String, String>> admins) {
+    public void setAdmins(Set<RedPlayer<String, String>> admins) {
         setToSave(true);
         this.admins = admins;
         RedProtect.get().rm.updateLiveRegion(this, "admins", serializeMembers(admins));
     }
 
-    public void setMembers(Set<PlayerRegion<String, String>> members) {
+    public void setMembers(Set<RedPlayer<String, String>> members) {
         setToSave(true);
         this.members = members;
         RedProtect.get().rm.updateLiveRegion(this, "members", serializeMembers(members));
     }
 
-    public void setLeaders(Set<PlayerRegion<String, String>> leaders) {
+    public void setLeaders(Set<RedPlayer<String, String>> leaders) {
         setToSave(true);
         this.leaders = leaders;
         RedProtect.get().rm.updateLiveRegion(this, "leaders", serializeMembers(leaders));
@@ -404,14 +403,14 @@ public class Region extends CoreRegion {
         } else {
             today = this.date;
         }
-        for (PlayerRegion<String, String> pname : this.leaders) {
+        for (RedPlayer<String, String> pname : this.leaders) {
             Optional<Player> play = Sponge.getServer().getPlayer(pname.getPlayerName());
             if (play.isPresent() && !pname.getPlayerName().equalsIgnoreCase(RedProtect.get().config.configRoot().region_settings.default_leader)) {
                 today = "&aOnline!";
                 break;
             }
         }
-        for (PlayerRegion<String, String> pname : this.admins) {
+        for (RedPlayer<String, String> pname : this.admins) {
             Optional<Player> play = Sponge.getServer().getPlayer(pname.getPlayerName());
             if (play.isPresent() && !pname.getPlayerName().equalsIgnoreCase(RedProtect.get().config.configRoot().region_settings.default_leader)) {
                 today = "&aOnline!";
@@ -500,7 +499,7 @@ public class Region extends CoreRegion {
         if (RedProtect.get().config.configRoot().online_mode) {
             name = RPUtil.UUIDtoPlayer(uuid);
         }
-        PlayerRegion<String, String> pinfo = new PlayerRegion<>(uuid, name);
+        RedPlayer<String, String> pinfo = new RedPlayer<>(uuid, name);
 
         this.members.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
         this.admins.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
@@ -523,7 +522,7 @@ public class Region extends CoreRegion {
         if (RedProtect.get().config.configRoot().online_mode) {
             name = RPUtil.UUIDtoPlayer(uuid);
         }
-        PlayerRegion<String, String> pinfo = new PlayerRegion<>(uuid, name);
+        RedPlayer<String, String> pinfo = new RedPlayer<>(uuid, name);
 
         this.admins.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
         this.leaders.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
@@ -546,7 +545,7 @@ public class Region extends CoreRegion {
         if (RedProtect.get().config.configRoot().online_mode) {
             name = RPUtil.UUIDtoPlayer(uuid);
         }
-        PlayerRegion<String, String> pinfo = new PlayerRegion<>(uuid, name);
+        RedPlayer<String, String> pinfo = new RedPlayer<>(uuid, name);
 
         this.members.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
         this.leaders.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
@@ -586,7 +585,7 @@ public class Region extends CoreRegion {
         if (RedProtect.get().config.configRoot().online_mode) {
             name = RPUtil.UUIDtoPlayer(uuid);
         }
-        PlayerRegion<String, String> pinfo = new PlayerRegion<>(uuid, name);
+        RedPlayer<String, String> pinfo = new RedPlayer<>(uuid, name);
 
         this.leaders.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
         this.admins.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
@@ -609,7 +608,7 @@ public class Region extends CoreRegion {
         if (RedProtect.get().config.configRoot().online_mode) {
             name = RPUtil.UUIDtoPlayer(uuid);
         }
-        PlayerRegion<String, String> pinfo = new PlayerRegion<>(uuid, name);
+        RedPlayer<String, String> pinfo = new RedPlayer<>(uuid, name);
 
         this.members.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
         this.leaders.removeIf(m -> m.getUUID().equalsIgnoreCase(uuid) || m.getPlayerName().equalsIgnoreCase(uuid));
@@ -1246,7 +1245,7 @@ public class Region extends CoreRegion {
             return RedProtect.get().lang.get("region.none");
         }
         StringBuilder adminsList = new StringBuilder();
-        for (PlayerRegion<String, String> admin : this.admins) {
+        for (RedPlayer<String, String> admin : this.admins) {
             adminsList.append(", ").append(admin.getPlayerName());
         }
         return "[" + adminsList.toString().substring(2) + "]";
@@ -1257,7 +1256,7 @@ public class Region extends CoreRegion {
             addLeader(RedProtect.get().config.configRoot().region_settings.default_leader);
         }
         StringBuilder leaderList = new StringBuilder();
-        for (PlayerRegion<String, String> leader : this.leaders) {
+        for (RedPlayer<String, String> leader : this.leaders) {
             leaderList.append(", ").append(leader.getPlayerName());
         }
         return "[" + leaderList.delete(0, 2).toString() + "]";

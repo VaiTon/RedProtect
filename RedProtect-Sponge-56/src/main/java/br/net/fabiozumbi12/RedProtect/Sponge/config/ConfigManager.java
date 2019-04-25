@@ -26,12 +26,11 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.config;
 
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.FlagGuiCategory;
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.GlobalFlagsCategory;
-import br.net.fabiozumbi12.RedProtect.Core.config.Category.MainCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.FlagGuiCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.GlobalFlagsCategory;
+import br.net.fabiozumbi12.RedProtect.Core.config.category.MainCategory;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
-import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;

@@ -26,12 +26,11 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.listeners;
 
-import br.net.fabiozumbi12.RedProtect.Core.region.PlayerRegion;
+import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
+import br.net.fabiozumbi12.RedProtect.Core.region.RedPlayer;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
-import br.net.fabiozumbi12.RedProtect.Sponge.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Sponge.events.EnterExitRegionEvent;
-import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPContainer;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPDoor;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
@@ -412,17 +411,17 @@ public class RPPlayerListener {
 
                         //check if tag is leaders or members names
                         if (tag.equalsIgnoreCase("{membername}")) {
-                            for (PlayerRegion<String, String> leader : r.getLeaders()) {
+                            for (RedPlayer<String, String> leader : r.getLeaders()) {
                                 if (sign.get(0).toPlain().equalsIgnoreCase(leader.getPlayerName())) {
                                     return;
                                 }
                             }
-                            for (PlayerRegion<String, String> member : r.getMembers()) {
+                            for (RedPlayer<String, String> member : r.getMembers()) {
                                 if (sign.get(0).toPlain().equalsIgnoreCase(member.getPlayerName())) {
                                     return;
                                 }
                             }
-                            for (PlayerRegion<String, String> admin : r.getAdmins()) {
+                            for (RedPlayer<String, String> admin : r.getAdmins()) {
                                 if (sign.get(0).toPlain().equalsIgnoreCase(admin.getPlayerName())) {
                                     return;
                                 }
@@ -1189,7 +1188,7 @@ public class RPPlayerListener {
             if (RedProtect.get().config.configRoot().notify.region_enter_mode.equalsIgnoreCase("CHAT") ||
                     RedProtect.get().config.configRoot().notify.region_enter_mode.equalsIgnoreCase("BOSSBAR")) {
                 StringBuilder leaderstringBuilder = new StringBuilder();
-                for (PlayerRegion<String, String> leader : r.getLeaders()) {
+                for (RedPlayer<String, String> leader : r.getLeaders()) {
                     leaderstringBuilder.append(", ").append(leader.getPlayerName());
                 }
                 leaderstring = leaderstringBuilder.toString();

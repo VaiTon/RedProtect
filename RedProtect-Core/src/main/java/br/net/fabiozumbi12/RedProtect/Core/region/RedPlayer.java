@@ -26,12 +26,12 @@
 
 package br.net.fabiozumbi12.RedProtect.Core.region;
 
-public class PlayerRegion<K, V> {
+public class RedPlayer<K, V> {
 
     private K uuid;
     private V playerName;
 
-    public PlayerRegion(K uuid, V playerName) {
+    public RedPlayer(K uuid, V playerName) {
         this.uuid = uuid;
         this.playerName = playerName;
     }
@@ -50,7 +50,7 @@ public class PlayerRegion<K, V> {
     }
 
     /**
-     * Get the last know playerName.
+     * Get the last known player name.
      *
      * @return String of PlayerName
      */
