@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Represents a 3D Sponge region created by players.
  */
-public class Region extends CoreRegion {
+public class Region extends CoreRegion<Player> {
 
     private String dynmapSet = RedProtect.get().config.configRoot().hooks.dynmap.marks_groupname;
     private Task task;
@@ -150,7 +150,8 @@ public class Region extends CoreRegion {
         checkParticle();
     }
 
-    private void checkParticle() {
+    @Override
+    protected void checkParticle() {
         Sponge.getScheduler().createSyncExecutor(RedProtect.get().container).schedule(() -> {
             if (this.flags.containsKey("particles")) {
                 if (task == null) {
@@ -201,6 +202,7 @@ public class Region extends CoreRegion {
         }, 1, TimeUnit.SECONDS);
     }
 
+    @Override
     public void notifyRemove() {
         if (task != null) {
             task.cancel();
@@ -208,13 +210,15 @@ public class Region extends CoreRegion {
         }
     }
 
+    @Override
     public void updateSigns() {
         for (String s : this.flags.keySet()) {
             updateSigns(s);
         }
     }
 
-    private void updateSigns(String fname) {
+    @Override
+    protected void updateSigns(String fname) {
         if (!RedProtect.get().config.configRoot().region_settings.enable_flag_sign) {
             return;
         }
@@ -281,13 +285,6 @@ public class Region extends CoreRegion {
         }
     }
 
-    public String getFlagStrings() {
-        StringBuilder flags = new StringBuilder();
-        for (String flag : this.flags.keySet()) {
-            flags.append(",").append(flag).append(":").append(this.flags.get(flag).toString());
-        }
-        return flags.toString().substring(1);
-    }
 
     public void setDate(String value) {
         setToSave(true);
@@ -433,24 +430,28 @@ public class Region extends CoreRegion {
                 RedProtect.get().lang.get("region.welcome.msg") + " " + wMsgTemp);
     }
 
+    @Override
     public void clearLeaders() {
         setToSave(true);
         this.leaders.clear();
         RedProtect.get().rm.updateLiveRegion(this, "leaders", "");
     }
 
+    @Override
     public void clearAdmins() {
         setToSave(true);
         this.admins.clear();
         RedProtect.get().rm.updateLiveRegion(this, "admins", "");
     }
 
+    @Override
     public void clearMembers() {
         setToSave(true);
         this.members.clear();
         RedProtect.get().rm.updateLiveRegion(this, "members", "");
     }
 
+    @Override
     public boolean isLeader(Player player) {
         if (RedProtect.get().config.configRoot().online_mode) {
             return isLeader(player.getUniqueId().toString(), RedProtect.get().config.configRoot().online_mode);
@@ -459,6 +460,7 @@ public class Region extends CoreRegion {
         }
     }
 
+    @Override
     public boolean isAdmin(Player player) {
         if (RedProtect.get().config.configRoot().online_mode) {
             return isAdmin(player.getUniqueId().toString(), RedProtect.get().config.configRoot().online_mode);
@@ -467,6 +469,7 @@ public class Region extends CoreRegion {
         }
     }
 
+    @Override
     public boolean isMember(Player player) {
         if (RedProtect.get().config.configRoot().online_mode) {
             return isMember(player.getUniqueId().toString(), RedProtect.get().config.configRoot().online_mode);
@@ -479,19 +482,17 @@ public class Region extends CoreRegion {
         return isLeader(player, RedProtect.get().config.configRoot().online_mode);
     }
 
+    @Override
     public boolean isAdmin(String player) {
         return isAdmin(player, RedProtect.get().config.configRoot().online_mode);
     }
 
+    @Override
     public boolean isMember(String player) {
         return isMember(player, RedProtect.get().config.configRoot().online_mode);
     }
 
-    /**
-     * Add an leader to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
-     *
-     * @param uuid - UUID or Player Name.
-     */
+    @Override
     public void addLeader(String uuid) {
         setToSave(true);
 
@@ -510,11 +511,7 @@ public class Region extends CoreRegion {
         RedProtect.get().rm.updateLiveRegion(this, "members", serializeMembers(members));
     }
 
-    /**
-     * Add a member to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
-     *
-     * @param uuid - UUID or Player Name.
-     */
+    @Override
     public void addMember(String uuid) {
         setToSave(true);
 
@@ -533,11 +530,8 @@ public class Region extends CoreRegion {
         RedProtect.get().rm.updateLiveRegion(this, "members", serializeMembers(members));
     }
 
-    /**
-     * Add an admin to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
-     *
-     * @param uuid - UUID or Player Name.
-     */
+
+    @Override
     public void addAdmin(String uuid) {
         setToSave(true);
 
@@ -556,11 +550,7 @@ public class Region extends CoreRegion {
         RedProtect.get().rm.updateLiveRegion(this, "members", serializeMembers(members));
     }
 
-    /**
-     * Remove an member to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
-     *
-     * @param uuid - UUID or Player Name.
-     */
+    @Override
     public void removeMember(String uuid) {
         setToSave(true);
 
@@ -619,6 +609,7 @@ public class Region extends CoreRegion {
         RedProtect.get().rm.updateLiveRegion(this, "members", serializeMembers(members));
     }
 
+    @Override
     public boolean getFlagBool(String key) {
         if (!flagExists(key) || !RedProtect.get().config.isFlagEnabled(key)) {
             if (RedProtect.get().config.getDefFlagsValues().get(key) != null) {
@@ -630,6 +621,7 @@ public class Region extends CoreRegion {
         return this.flags.get(key) instanceof Boolean && (Boolean) this.flags.get(key);
     }
 
+    @Override
     public String getFlagString(String key) {
         if (!flagExists(key) || !RedProtect.get().config.isFlagEnabled(key)) {
             if (RedProtect.get().config.getDefFlagsValues().get(key) != null) {
@@ -680,42 +672,49 @@ public class Region extends CoreRegion {
     }
 
     //---------------------- Admin Flags --------------------------//
-
+    @Override
     public boolean canPickup(Player p) {
-        return !flagExists("can-pickup") || getFlagBool("can-pickup") || checkAllowedPlayer(p);
+        return !flagExists("can-pickup") || getFlagBool("can-pickup") || canBypass(p);
     }
 
+    @Override
     public boolean canDrop(Player p) {
-        return !flagExists("can-drop") || getFlagBool("can-drop") || checkAllowedPlayer(p);
+        return !flagExists("can-drop") || getFlagBool("can-drop") || canBypass(p);
     }
 
+    @Override
     public boolean canSpawnWhiter() {
         return !flagExists("spawn-wither") || getFlagBool("spawn-wither");
     }
 
-    public int maxPlayers() {
+    @Override
+    public int getMaxPlayers() {
         if (!flagExists("max-players")) {
             return -1;
         }
         return new Integer(getFlagString("max-players"));
     }
 
-    public boolean canDeath() {
+    public boolean isDeathAllowed() {
         return !flagExists("can-death") || getFlagBool("can-death");
     }
 
+    @Override
     public boolean allowDynmap() {
         return !flagExists("dynmap") || getFlagBool("dynmap");
     }
 
-    public boolean keepInventory() {
+    @Override
+    public boolean isKeepInventory() {
         return flagExists("keep-inventory") && getFlagBool("keep-inventory");
     }
 
-    public boolean keepLevels() {
+    @Override
+    public boolean isKeepLevels() {
         return flagExists("keep-levels") && getFlagBool("keep-levels");
     }
 
+    @Override
     public boolean cmdOnHealth(Player p) {
         if (!flagExists("cmd-onhealth")) {
             return false;
@@ -729,8 +728,7 @@ public class Region extends CoreRegion {
             if (cmd.startsWith("/")) {
                 cmd = cmd.substring(1);
             }
-            boolean waiting = false;
-            if (p.get(Keys.HEALTH).get() <= health && !waiting) {
+            if (p.get(Keys.HEALTH).get() <= health) {
                 Sponge.getGame().getCommandManager().process(RedProtect.get().getServer().getConsole(), cmd.replace("{player}", p.getName()));
     			/*waiting = true;
     			Bukkit.getScheduler().runTaskLater(RedProtect.get().plugin, new Runnable(){
@@ -745,42 +743,47 @@ public class Region extends CoreRegion {
         return run;
     }
 
+    @Override
     public boolean canPlayerDamage() {
         return !flagExists("player-damage") || getFlagBool("player-damage");
     }
 
+    @Override
     public boolean canHunger() {
         return !flagExists("can-hunger") || getFlagBool("can-hunger");
     }
 
-    public boolean canSign(Player p) {
+    @Override
+    public boolean canPlaceSign(Player p) {
         if (!flagExists("sign")) {
-            return checkAllowedPlayer(p);
+            return canBypass(p);
         }
-        return getFlagBool("sign") || checkAllowedPlayer(p);
+        return getFlagBool("sign") || canBypass(p);
     }
 
     public boolean canExit(Player p) {
-        if (!canExitWithItens(p)) {
+        if (!canExitWithItems(p)) {
             return false;
         }
-        return !flagExists("exit") || getFlagBool("exit") || RedProtect.get().ph.hasPerm(p, "redprotect.region-exit." + this.name) || checkAllowedPlayer(p);
+        return !flagExists("exit") || getFlagBool("exit") || RedProtect.get().ph.hasPerm(p, "redprotect.region-exit." + this.name) || canBypass(p);
     }
 
+    @Override
     public boolean canEnter(Player p) {
         if (RedProtect.get().denyEnter.containsKey(p.getName()) && RedProtect.get().denyEnter.get(p.getName()).contains(this.getID())) {
-            return checkAllowedPlayer(p);
+            return canBypass(p);
         }
 
-        return !flagExists("enter") || getFlagBool("enter") || RedProtect.get().ph.hasPerm(p, "redprotect.region-enter." + this.name) || checkAllowedPlayer(p);
+        return !flagExists("enter") || getFlagBool("enter") || RedProtect.get().ph.hasPerm(p, "redprotect.region-enter." + this.name) || canBypass(p);
     }
 
-    public boolean canExitWithItens(Player p) {
+    @Override
+    public boolean canExitWithItems(Player p) {
         if (!flagExists("deny-exit-items")) {
             return true;
         }
 
-        if (checkAllowedPlayer(p)) {
+        if (canBypass(p)) {
             return true;
         }
 
@@ -797,12 +800,13 @@ public class Region extends CoreRegion {
         return true;
     }
 
-    public boolean canEnterWithItens(Player p) {
+    @Override
+    public boolean canEnterWithItems(Player p) {
         if (!flagExists("allow-enter-items")) {
             return true;
         }
 
-        if (checkAllowedPlayer(p)) {
+        if (canBypass(p)) {
             return true;
         }
 
@@ -818,11 +822,12 @@ public class Region extends CoreRegion {
         return false;
     }
 
-    public boolean denyEnterWithItens(Player p) {
+    @Override
+    public boolean denyEnterWithItems(Player p) {
         if (!flagExists("deny-enter-items")) {
             return true;
         }
-        if (checkAllowedPlayer(p)) {
+        if (canBypass(p)) {
             return true;
         }
 
@@ -908,46 +913,56 @@ public class Region extends CoreRegion {
         return flagExists("treefarm") && (b.getState().getType().getName().contains("log") || b.getState().getType().getName().contains("leaves")) && getFlagBool("treefarm");
     }
 
+    @Override
     public boolean canSkill(Player p) {
-        return !flagExists("up-skills") || getFlagBool("up-skills") || checkAllowedPlayer(p);
+        return !flagExists("up-skills") || getFlagBool("up-skills") || canBypass(p);
     }
 
+    @Override
     public boolean canBack(Player p) {
-        return !flagExists("can-back") || getFlagBool("can-back") || checkAllowedPlayer(p);
+        return !flagExists("can-back") || getFlagBool("can-back") || canBypass(p);
     }
 
+    @Override
     public boolean isPvPArena() {
         return flagExists("pvparena") && getFlagBool("pvparena");
     }
 
+    @Override
     public boolean allowMod(Player p) {
         if (!flagExists("allow-mod")) {
-            return checkAllowedPlayer(p);
+            return canBypass(p);
         }
-        return getFlagBool("allow-mod") || checkAllowedPlayer(p);
+        return getFlagBool("allow-mod") || canBypass(p);
     }
 
+    @Override
     public boolean canEnterPortal(Player p) {
-        return !flagExists("portal-enter") || getFlagBool("portal-enter") || checkAllowedPlayer(p);
+        return !flagExists("portal-enter") || getFlagBool("portal-enter") || canBypass(p);
     }
 
+    @Override
     public boolean canExitPortal(Player p) {
-        return !flagExists("portal-exit") || getFlagBool("portal-exit") || checkAllowedPlayer(p);
+        return !flagExists("portal-exit") || getFlagBool("portal-exit") || canBypass(p);
     }
 
+    @Override
     public boolean canPet(Player p) {
-        return !flagExists("can-pet") || getFlagBool("can-pet") || checkAllowedPlayer(p);
+        return !flagExists("can-pet") || getFlagBool("can-pet") || canBypass(p);
     }
 
-    public boolean canProtectiles(Player p) {
-        return !flagExists("can-projectiles") || getFlagBool("can-projectiles") || checkAllowedPlayer(p);
+    @Override
+    public boolean canProjectiles(Player p) {
+        return !flagExists("can-projectiles") || getFlagBool("can-projectiles") || canBypass(p);
     }
 
+    @Override
     public boolean canCreatePortal() {
         return !flagExists("allow-create-portal") || getFlagBool("allow-create-portal");
     }
 
-    public boolean AllowCommands(Player p, String fullcmd) {
+    @Override
+    public boolean isCmdAllowed(Player p, String fullcmd) {
         if (!flagExists("allow-cmds")) {
             return true;
         }
@@ -983,7 +998,8 @@ public class Region extends CoreRegion {
         return false;
     }
 
-    public boolean DenyCommands(Player p, String fullcmd) {
+    @Override
+    public boolean isCmdDenied(String fullcmd) {
         if (!flagExists("deny-cmds")) {
             return true;
         }
@@ -1022,11 +1038,12 @@ public class Region extends CoreRegion {
 
 
     //---------------------- Player Flags --------------------------//
-    public boolean allowPressPlate(Player p) {
+    @Override
+    public boolean canPressPlate(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("press-plate")) {
-            return RedProtect.get().config.configRoot().flags.get("press-plate") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("press-plate") || canBypass(p);
         }
-        return getFlagBool("press-plate") || checkAllowedPlayer(p);
+        return getFlagBool("press-plate") || canBypass(p);
     }
 
     public boolean canBuild(Player p) {
@@ -1034,12 +1051,12 @@ public class Region extends CoreRegion {
             return false;
         }
         if (!RedProtect.get().config.isFlagEnabled("build")) {
-            return RedProtect.get().config.configRoot().flags.get("build") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("build") || canBypass(p);
         }
-        return getFlagBool("build") || checkAllowedPlayer(p);
+        return getFlagBool("build") || canBypass(p);
     }
 
-    public boolean leavesDecay() {
+    public boolean canLeavesDecay() {
         if (!RedProtect.get().config.isFlagEnabled("leaves-decay")) {
             return RedProtect.get().config.configRoot().flags.get("leaves-decay");
         }
@@ -1051,39 +1068,39 @@ public class Region extends CoreRegion {
      *
      * @return boolean
      */
-    public boolean allowSpawner(Player p) {
+    @Override
+    public boolean canPlaceSpawner(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("allow-spawner")) {
             return RedProtect.get().config.configRoot().flags.get("allow-spawner");
         }
-        return getFlagBool("allow-spawner") || checkAllowedPlayer(p);
+        return getFlagBool("allow-spawner") || canBypass(p);
     }
 
+    @Override
     public boolean canTeleport(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("teleport")) {
-            return checkAllowedPlayer(p) || RedProtect.get().config.configRoot().flags.get("teleport");
+            return canBypass(p) || RedProtect.get().config.configRoot().flags.get("teleport");
         }
-        return checkAllowedPlayer(p) || getFlagBool("teleport");
+        return canBypass(p) || getFlagBool("teleport");
     }
 
-    /**
-     * Allow players with fly enabled fly on this region.
-     *
-     * @return boolean
-     */
+    @Override
     public boolean canFly(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("allow-fly")) {
             return RedProtect.get().config.configRoot().flags.get("allow-fly");
         }
-        return getFlagBool("allow-fly") || checkAllowedPlayer(p);
+        return getFlagBool("allow-fly") || canBypass(p);
     }
 
-    public boolean FlowDamage() {
+    @Override
+    public boolean canFlowDamage() {
         if (!RedProtect.get().config.isFlagEnabled("flow-damage")) {
             return RedProtect.get().config.configRoot().flags.get("flow-damage");
         }
         return getFlagBool("flow-damage");
     }
 
+    @Override
     public boolean canMobLoot() {
         if (!RedProtect.get().config.isFlagEnabled("mob-loot")) {
             return RedProtect.get().config.configRoot().flags.get("mob-loot");
@@ -1091,55 +1108,63 @@ public class Region extends CoreRegion {
         return getFlagBool("mob-loot");
     }
 
-    public boolean allowEffects(Player p) {
+    @Override
+    public boolean canGetEffects(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("allow-effects")) {
             return RedProtect.get().config.configRoot().flags.get("allow-effects");
         }
-        return getFlagBool("allow-effects") || checkAllowedPlayer(p);
+        return getFlagBool("allow-effects") || canBypass(p);
     }
 
-    public boolean usePotions(Player p) {
+    @Override
+    public boolean canUsePotions(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("use-potions")) {
             return RedProtect.get().config.configRoot().flags.get("use-potions");
         }
-        return getFlagBool("use-potions") || checkAllowedPlayer(p);
+        return getFlagBool("use-potions") || canBypass(p);
     }
 
-    public boolean canPVP(Player p) {
+    @Override
+    public boolean canPVP(Player attacker, Player defender) {
         if (!RedProtect.get().config.isFlagEnabled("pvp")) {
-            return RedProtect.get().config.configRoot().flags.get("pvp") || RedProtect.get().ph.hasPerm(p, "redprotect.bypass");
+            return RedProtect.get().config.configRoot().flags.get("pvp") || RedProtect.get().ph.hasPerm(attacker, "redprotect.bypass");
         }
-        return getFlagBool("pvp") || RedProtect.get().ph.hasPerm(p, "redprotect.bypass");
+        return getFlagBool("pvp") || RedProtect.get().ph.hasPerm(attacker, "redprotect.bypass");
     }
 
-    public boolean canChest(Player p) {
+    @Override
+    public boolean canOpenChest(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("chest")) {
-            return RedProtect.get().config.configRoot().flags.get("chest") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("chest") || canBypass(p);
         }
-        return getFlagBool("chest") || checkAllowedPlayer(p);
+        return getFlagBool("chest") || canBypass(p);
     }
 
-    public boolean canLever(Player p) {
+    @Override
+    public boolean canUseLever(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("lever")) {
-            return RedProtect.get().config.configRoot().flags.get("lever") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("lever") || canBypass(p);
         }
-        return getFlagBool("lever") || checkAllowedPlayer(p);
+        return getFlagBool("lever") || canBypass(p);
     }
 
-    public boolean canButton(Player p) {
+    @Override
+    public boolean canUseButton(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("button")) {
-            return RedProtect.get().config.configRoot().flags.get("button") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("button") || canBypass(p);
         }
-        return getFlagBool("button") || checkAllowedPlayer(p);
+        return getFlagBool("button") || canBypass(p);
     }
 
-    public boolean canDoor(Player p) {
+    @Override
+    public boolean canOpenDoor(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("door")) {
-            return RedProtect.get().config.configRoot().flags.get("door") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("door") || canBypass(p);
         }
-        return getFlagBool("door") || checkAllowedPlayer(p);
+        return getFlagBool("door") || canBypass(p);
     }
 
+    @Override
     public boolean canSpawnMonsters() {
         if (!RedProtect.get().config.isFlagEnabled("spawn-monsters")) {
             return RedProtect.get().config.configRoot().flags.get("spawn-monsters");
@@ -1154,20 +1179,23 @@ public class Region extends CoreRegion {
         return getFlagBool("spawn-animals");
     }
 
-    public boolean canMinecart(Player p) {
+    @Override
+    public boolean canPlaceVehicle(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("minecart")) {
-            return RedProtect.get().config.configRoot().flags.get("minecart") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("minecart") || canBypass(p);
         }
-        return getFlagBool("minecart") || checkAllowedPlayer(p);
+        return getFlagBool("minecart") || canBypass(p);
     }
 
+    @Override
     public boolean canInteractPassives(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("passives")) {
-            return RedProtect.get().config.configRoot().flags.get("passives") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("passives") || canBypass(p);
         }
-        return getFlagBool("passives") || checkAllowedPlayer(p);
+        return getFlagBool("passives") || canBypass(p);
     }
 
+    @Override
     public boolean canFlow() {
         if (!RedProtect.get().config.isFlagEnabled("flow")) {
             return RedProtect.get().config.configRoot().flags.get("flow");
@@ -1182,13 +1210,15 @@ public class Region extends CoreRegion {
         return getFlagBool("fire");
     }
 
-    public boolean AllowHome(Player p) {
+    @Override
+    public boolean isHomeAllowed(Player p) {
         if (!RedProtect.get().config.isFlagEnabled("allow-home")) {
-            return RedProtect.get().config.configRoot().flags.get("allow-home") || checkAllowedPlayer(p);
+            return RedProtect.get().config.configRoot().flags.get("allow-home") || canBypass(p);
         }
-        return getFlagBool("allow-home") || checkAllowedPlayer(p);
+        return getFlagBool("allow-home") || canBypass(p);
     }
 
+    @Override
     public boolean canGrow() {
         if (!RedProtect.get().config.isFlagEnabled("can-grow")) {
             return RedProtect.get().config.configRoot().flags.get("can-grow");
@@ -1197,13 +1227,15 @@ public class Region extends CoreRegion {
     }
     //--------------------------------------------------------------//
 
+    @Override
     public void setValue(long value) {
         setToSave(true);
         RedProtect.get().rm.updateLiveRegion(this, "value", value);
         this.value = value;
     }
 
-    private boolean checkAllowedPlayer(Player p) {
+    @Override
+    protected boolean canBypass(Player p) {
         return this.isLeader(p) || this.isAdmin(p) || this.isMember(p) || RedProtect.get().ph.hasPerm(p, "redprotect.command.admin");
     }
 
@@ -1240,25 +1272,20 @@ public class Region extends CoreRegion {
         return new Location<>(Sponge.getServer().getWorld(this.world).get(), this.getCenterX(), this.getCenterY(), this.getCenterZ());
     }
 
+    @Override
     public String getAdminDesc() {
         if (this.admins.size() == 0) {
             return RedProtect.get().lang.get("region.none");
         }
-        StringBuilder adminsList = new StringBuilder();
-        for (RedPlayer<String, String> admin : this.admins) {
-            adminsList.append(", ").append(admin.getPlayerName());
-        }
-        return "[" + adminsList.toString().substring(2) + "]";
+        return getDesc(this.admins);
     }
 
+    @Override
     public String getLeadersDesc() {
         if (this.leaders.size() == 0) {
             addLeader(RedProtect.get().config.configRoot().region_settings.default_leader);
         }
-        StringBuilder leaderList = new StringBuilder();
-        for (RedPlayer<String, String> leader : this.leaders) {
-            leaderList.append(", ").append(leader.getPlayerName());
-        }
-        return "[" + leaderList.delete(0, 2).toString() + "]";
+        return getDesc(this.leaders);
     }
+
 }

@@ -28,7 +28,6 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.listeners;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPContainer;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import org.bukkit.Location;
@@ -250,13 +249,13 @@ public class RPEntityListener implements Listener {
                                 mp2 = p2.getInventory().getItemInOffHand().getType();
                             }
                         }
-                        if (mp2.equals(Material.EGG) && !r1.canProtectiles(p2)) {
+                        if (mp2.equals(Material.EGG) && !r1.canProjectiles(p2)) {
                             e.setCancelled(true);
                             RedProtect.get().lang.sendMessage(p2, "playerlistener.region.cantuse");
                             return;
                         }
                         if (r2 != null) {
-                            if (mp2.equals(Material.EGG) && !r2.canProtectiles(p2)) {
+                            if (mp2.equals(Material.EGG) && !r2.canProjectiles(p2)) {
                                 e.setCancelled(true);
                                 RedProtect.get().lang.sendMessage(p2, "playerlistener.region.cantuse");
                                 return;

@@ -26,11 +26,10 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.listeners;
 
+import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
 import br.net.fabiozumbi12.RedProtect.Sponge.actions.EncompassRegionBuilder;
-import br.net.fabiozumbi12.RedProtect.Sponge.config.LangManager;
-import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPContainer;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Sponge.region.RegionBuilder;
@@ -89,7 +88,7 @@ public class RPBlockListener {
 
         Region signr = RedProtect.get().rm.getTopRegion(loc, this.getClass().getName());
 
-        if (signr != null && !signr.canSign(p)) {
+        if (signr != null && !signr.canPlaceSign(p)) {
             RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantinteract");
             e.setCancelled(true);
             return;
@@ -211,13 +210,13 @@ public class RPBlockListener {
 
         if (r != null) {
 
-            if (!r.canMinecart(p) && m.getName().contains("minecart")) {
+            if (!r.canPlaceVehicle(p) && m.getName().contains("minecart")) {
                 RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantplace");
                 e.setCancelled(true);
                 return;
             }
 
-            if (b.getState().getType().equals(BlockTypes.MOB_SPAWNER) && r.allowSpawner(p)) {
+            if (b.getState().getType().equals(BlockTypes.MOB_SPAWNER) && r.canPlaceSpawner(p)) {
                 return;
             }
 
@@ -267,7 +266,7 @@ public class RPBlockListener {
             return;
         }
 
-        if (r != null && b.getState().getType().equals(BlockTypes.MOB_SPAWNER) && r.allowSpawner(p)) {
+        if (r != null && b.getState().getType().equals(BlockTypes.MOB_SPAWNER) && r.canPlaceSpawner(p)) {
             return;
         }
 
@@ -339,7 +338,7 @@ public class RPBlockListener {
 
         if ((ent instanceof Boat || ent instanceof Minecart) && e.getCause().first(Player.class).isPresent()) {
             Player p = e.getCause().first(Player.class).get();
-            if (!r.canMinecart(p)) {
+            if (!r.canPlaceVehicle(p)) {
                 RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantbreak");
                 e.setCancelled(true);
             }
@@ -411,7 +410,7 @@ public class RPBlockListener {
         BlockSnapshot bfrom = e.getTransactions().get(0).getOriginal();
         RedProtect.get().logger.debug(LogLevel.BLOCKS, "Is BlockFromToEvent.Decay event is to " + bfrom.getState().getType().getName() + " from " + bfrom.getState().getType().getName());
         Region r = RedProtect.get().rm.getTopRegion(bfrom.getLocation().get(), this.getClass().getName());
-        if (r != null && !r.leavesDecay()) {
+        if (r != null && !r.canLeavesDecay()) {
             e.setCancelled(true);
         }
     }

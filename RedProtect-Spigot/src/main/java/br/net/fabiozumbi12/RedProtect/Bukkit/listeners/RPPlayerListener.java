@@ -140,7 +140,7 @@ public class RPPlayerListener implements Listener {
         RedProtect.get().logger.debug(LogLevel.DEFAULT, "RPPlayerListener - EntityBlockFormEvent canceled? " + e.isCancelled());
         Player p = (Player) e.getEntity();
         Region r = RedProtect.get().rm.getTopRegion(e.getBlock().getLocation());
-        if (r != null && e.getNewState().getType().name().contains("FROSTED_ICE") && !r.canIceForm(p)) {
+        if (r != null && e.getNewState().getType().name().contains("FROSTED_ICE") && !r.canPlayerIceForm()) {
             e.setCancelled(true);
         }
     }
@@ -249,7 +249,7 @@ public class RPPlayerListener implements Listener {
         if (r == null) {
             if (b != null && (b.getType().equals(Material.ANVIL) || b.getState() instanceof InventoryHolder ||
                     RedProtect.get().config.configRoot().private_cat.allowed_blocks.stream().anyMatch(b.getType().name()::matches))) {
-                Boolean out = RedProtect.get().config.configRoot().private_cat.allow_outside;
+                boolean out = RedProtect.get().config.configRoot().private_cat.allow_outside;
                 if (out && !cont.canOpen(b, p)) {
                     RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantopen");
                     event.setCancelled(true);
@@ -265,12 +265,12 @@ public class RPPlayerListener implements Listener {
                     event.setCancelled(true);
                     event.setUseItemInHand(Event.Result.DENY);
                     return;
-                } else if ((hand.equals(Material.BOW) || (hand.name().contains("SNOW") && hand.name().contains("BALL")) || hand.name().contains("FIREWORK") || hand.equals(Material.EGG)) && !r.canProtectiles(p)) {
+                } else if ((hand.equals(Material.BOW) || (hand.name().contains("SNOW") && hand.name().contains("BALL")) || hand.name().contains("FIREWORK") || hand.equals(Material.EGG)) && !r.canProjectiles(p)) {
                     RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantuse");
                     event.setCancelled(true);
                     event.setUseItemInHand(Event.Result.DENY);
                     return;
-                } else if (hand.equals(Material.POTION) && !r.usePotions(p)) {
+                } else if (hand.equals(Material.POTION) && !r.canUsePotions(p)) {
                     RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantuse");
                     event.setCancelled(true);
                     event.setUseItemInHand(Event.Result.DENY);
@@ -334,35 +334,35 @@ public class RPPlayerListener implements Listener {
                         event.setCancelled(true);
                     }
                 } else if (b.getType().equals(Material.ENDER_CHEST)) {
-                    if (!r.canEnderChest(p)) {
+                    if (!r.canOpenEnderChest(p)) {
                         RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantopen");
                         event.setCancelled(true);
                     }
                 } else if (b.getType().equals(Material.ANVIL) || b.getState().getData() instanceof InventoryHolder ||
                         RedProtect.get().config.configRoot().private_cat.allowed_blocks.stream().anyMatch(b.getType().name()::matches)) {
-                    if ((r.canChest(p) && !cont.canOpen(b, p) || (!r.canChest(p) && cont.canOpen(b, p)) || (!r.canChest(p) && !cont.canOpen(b, p)))) {
+                    if ((r.canOpenChest(p) && !cont.canOpen(b, p) || (!r.canOpenChest(p) && cont.canOpen(b, p)) || (!r.canOpenChest(p) && !cont.canOpen(b, p)))) {
                         RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantopen");
                         event.setCancelled(true);
                     }
                 } else if (b.getType().name().contains("LEVER") || (b.getType().name().contains("REDSTONE") && !b.getType().equals(Material.REDSTONE_ORE))) {
-                    if (!r.canLever(p)) {
+                    if (!r.canUseLever(p)) {
                         RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantlever");
                         event.setCancelled(true);
                     }
                 } else if (b.getType().name().contains("BUTTON")) {
-                    if (!r.canButton(p)) {
+                    if (!r.canUseButton(p)) {
                         RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantbutton");
                         event.setCancelled(true);
                     }
                 } else if (RPDoor.isOpenable(b) && event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-                    if (!r.canDoor(p)/* || (r.canDoor(p) && !cont.canOpen(b, p))*/) {
+                    if (!r.canOpenDoor(p)/* || (r.canOpenDoor(p) && !cont.canOpen(b, p))*/) {
                         RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantdoor");
                         event.setCancelled(true);
                     } else {
                         RPDoor.ChangeDoor(b, r);
                     }
                 } else if (itemInHand != null && (itemInHand.getType().name().startsWith("BOAT") || itemInHand.getType().name().contains("MINECART"))) {
-                    if (!r.canMinecart(p)) {
+                    if (!r.canPlaceVehicle(p)) {
                         RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantplace");
                         event.setUseItemInHand(Event.Result.DENY);
                         event.setCancelled(true);
@@ -374,7 +374,7 @@ public class RPPlayerListener implements Listener {
                         event.setCancelled(true);
                     }
                 } else if ((event.getAction().equals(Action.LEFT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) &&
-                        b.getType().name().contains("SIGN") && !r.canSign(p)) {
+                        b.getType().name().contains("SIGN") && !r.canPlaceSign(p)) {
                     Sign sign = (Sign) b.getState();
                     for (String tag : RedProtect.get().config.configRoot().region_settings.allow_sign_interact_tags) {
                         //check first rule
@@ -462,7 +462,7 @@ public class RPPlayerListener implements Listener {
             }
         } else if (e instanceof Minecart || e instanceof Boat) {
             Region r = RedProtect.get().rm.getTopRegion(l);
-            if (r != null && !r.canMinecart(p)) {
+            if (r != null && !r.canPlaceVehicle(p)) {
                 RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantenter");
                 event.setCancelled(true);
             }
@@ -520,7 +520,7 @@ public class RPPlayerListener implements Listener {
                 RedProtect.get().logger.debug(LogLevel.DEFAULT, "Cmd on healt: true");
             }
 
-            if (!r.canDeath() && play.getHealth() <= 1) {
+            if (!r.isDeathAllowed() && play.getHealth() <= 1) {
                 e.setCancelled(true);
             }
         }
@@ -572,7 +572,7 @@ public class RPPlayerListener implements Listener {
             e.setCancelled(true);
         }
 
-        if ((e.getEntity() instanceof Boat || e.getEntity() instanceof Minecart) && !r.canMinecart(p)) {
+        if ((e.getEntity() instanceof Boat || e.getEntity() instanceof Minecart) && !r.canPlaceVehicle(p)) {
             RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantbreak");
             e.setCancelled(true);
         }
@@ -607,14 +607,14 @@ public class RPPlayerListener implements Listener {
         if (rto != null) {
 
             //Allow teleport to with items
-            if (!rto.canEnterWithItens(p)) {
+            if (!rto.canEnterWithItems(p)) {
                 RedProtect.get().lang.sendMessage(p, RedProtect.get().lang.get("playerlistener.region.onlyenter.withitems").replace("{items}", rto.getFlags().get("allow-enter-items").toString()));
                 e.setCancelled(true);
                 return;
             }
 
             //Deny teleport to with item
-            if (!rto.denyEnterWithItens(p)) {
+            if (!rto.denyEnterWithItems(p)) {
                 RedProtect.get().lang.sendMessage(p, RedProtect.get().lang.get("playerlistener.region.denyenter.withitems").replace("{items}", rto.getFlags().get("deny-enter-items").toString()));
                 e.setCancelled(true);
                 return;
@@ -943,14 +943,14 @@ public class RPPlayerListener implements Listener {
             }
 
             //Allow enter with items
-            if (!r.canEnterWithItens(p)) {
+            if (!r.canEnterWithItems(p)) {
                 e.setTo(RPUtil.DenyEnterPlayer(w, lfrom, e.getTo(), r, false));
                 RedProtect.get().lang.sendMessage(p, RedProtect.get().lang.get("playerlistener.region.onlyenter.withitems").replace("{items}", r.getFlags().get("allow-enter-items").toString()));
                 return;
             }
 
             //Deny enter with item
-            if (!r.denyEnterWithItens(p)) {
+            if (!r.denyEnterWithItems(p)) {
                 e.setTo(RPUtil.DenyEnterPlayer(w, lfrom, e.getTo(), r, false));
                 RedProtect.get().lang.sendMessage(p, RedProtect.get().lang.get("playerlistener.region.denyenter.withitems").replace("{items}", r.getFlags().get("deny-enter-items").toString()));
                 return;
@@ -1140,7 +1140,7 @@ public class RPPlayerListener implements Listener {
         Player p = (Player) e.getEntity().getShooter();
         Region r = RedProtect.get().rm.getTopRegion(l);
 
-        if (r != null && !r.canProtectiles(p)) {
+        if (r != null && !r.canProjectiles(p)) {
             e.setCancelled(true);
             RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantuse");
         }
@@ -1186,7 +1186,7 @@ public class RPPlayerListener implements Listener {
         RedProtect.get().logger.debug(LogLevel.DEFAULT, "Is PotionSplashEvent event.");
 
         Region r = RedProtect.get().rm.getTopRegion(ent.getLocation());
-        if (r != null && !r.usePotions(p)) {
+        if (r != null && !r.canUsePotions(p)) {
             RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantuse");
             e.setCancelled(true);
             return;

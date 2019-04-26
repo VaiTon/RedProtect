@@ -29,7 +29,6 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.listeners;
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
 import br.net.fabiozumbi12.RedProtect.Bukkit.actions.EncompassRegionBuilder;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPContainer;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Bukkit.region.RegionBuilder;
@@ -85,7 +84,7 @@ public class RPBlockListener implements Listener {
 
         Region signr = RedProtect.get().rm.getTopRegion(b.getLocation());
 
-        if (signr != null && !signr.canSign(p)) {
+        if (signr != null && !signr.canPlaceSign(p)) {
             RedProtect.get().lang.sendMessage(p, "playerlistener.region.cantinteract");
             e.setCancelled(true);
             return;
@@ -117,7 +116,7 @@ public class RPBlockListener implements Listener {
         }
 
         if ((RedProtect.get().config.configRoot().private_cat.use && b.getType().equals(Material.WALL_SIGN))) {
-            Boolean out = RedProtect.get().config.configRoot().private_cat.allow_outside;
+            boolean out = RedProtect.get().config.configRoot().private_cat.allow_outside;
             if (cont.validatePrivateSign(e.getLines())) {
                 if (out || signr != null) {
                     if (cont.isContainer(b)) {
@@ -200,7 +199,7 @@ public class RPBlockListener implements Listener {
             m = e.getItemInHand().getType();
         }
 
-        Boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
+        boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
         Region r = RedProtect.get().rm.getTopRegion(b.getLocation());
 
         if (!RedProtect.get().ph.hasPerm(p, "redprotect.bypass") && antih && m != null &&
@@ -222,7 +221,7 @@ public class RPBlockListener implements Listener {
 
         if (r != null) {
 
-            if (m != null && !r.canMinecart(p) && (m.name().contains("MINECART") || m.name().contains("BOAT"))) {
+            if (m != null && !r.canPlaceVehicle(p) && (m.name().contains("MINECART") || m.name().contains("BOAT"))) {
                 RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantplace");
                 e.setCancelled(true);
                 return;
@@ -278,7 +277,7 @@ public class RPBlockListener implements Listener {
             return;
         }
 
-        Boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
+        boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
         Region r = RedProtect.get().rm.getTopRegion(b.getLocation());
 
         if (!RedProtect.get().ph.hasPerm(p, "redprotect.bypass")) {
@@ -573,7 +572,7 @@ public class RPBlockListener implements Listener {
         Player p = (Player) e.getAttacker();
         Region r = RedProtect.get().rm.getTopRegion(cart.getLocation());
 
-        if (r != null && !r.canMinecart(p)) {
+        if (r != null && !r.canPlaceVehicle(p)) {
             RedProtect.get().lang.sendMessage(p, "blocklistener.region.cantbreak");
             e.setCancelled(true);
         }
@@ -589,7 +588,7 @@ public class RPBlockListener implements Listener {
         Block piston = e.getBlock();
         List<Block> blocks = e.getBlocks();
         Region pr = RedProtect.get().rm.getTopRegion(piston.getLocation());
-        Boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
+        boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
         World w = e.getBlock().getWorld();
         for (Block b : blocks) {
             RedProtect.get().logger.debug(LogLevel.DEFAULT, "BlockPistonExtendEvent event - Block: " + b.getType().name());
@@ -621,7 +620,7 @@ public class RPBlockListener implements Listener {
         }
 
         World w = e.getBlock().getWorld();
-        Boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
+        boolean antih = RedProtect.get().config.configRoot().region_settings.anti_hopper;
         Block piston = e.getBlock();
         if (!Bukkit.getBukkitVersion().startsWith("1.8.") && !Bukkit.getBukkitVersion().startsWith("1.9.")) {
             Block b = e.getRetractLocation().getBlock();
@@ -670,7 +669,7 @@ public class RPBlockListener implements Listener {
         RedProtect.get().logger.debug(LogLevel.DEFAULT, "RPBlockListener - Is LeavesDecayEvent event");
 
         Region r = RedProtect.get().rm.getTopRegion(e.getBlock().getLocation());
-        if (r != null && !r.leavesDecay()) {
+        if (r != null && !r.canLeavesDecay()) {
             e.setCancelled(true);
         }
     }

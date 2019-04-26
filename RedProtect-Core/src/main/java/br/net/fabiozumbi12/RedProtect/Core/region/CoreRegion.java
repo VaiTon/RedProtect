@@ -29,7 +29,7 @@ package br.net.fabiozumbi12.RedProtect.Core.region;
 import java.io.Serializable;
 import java.util.*;
 
-public class CoreRegion implements Serializable {
+public abstract class CoreRegion<Player> implements Serializable {
 
     public static final long serialVersionUID = 2861198224185302015L;
     protected int minMbrX;
@@ -172,7 +172,25 @@ public class CoreRegion implements Serializable {
      * @param tppoint    Teleport Point
      * @param tppointYaw Teleport Pitch and Yam
      */
-    public CoreRegion(String name, Set<RedPlayer<String, String>> admins, Set<RedPlayer<String, String>> members, Set<RedPlayer<String, String>> leaders, int[] x, int[] z, int miny, int maxy, int prior, String worldName, String date, Map<String, Object> flags, String welcome, long value, int[] tppoint, float[] tppointYaw, boolean candel) {
+    public CoreRegion(
+            String name,
+            Set<RedPlayer<String, String>> admins,
+            Set<RedPlayer<String, String>> members,
+            Set<RedPlayer<String, String>> leaders,
+            int[] x,
+            int[] z,
+            int miny,
+            int maxy,
+            int prior,
+            String worldName,
+            String date,
+            Map<String, Object> flags,
+            String welcome,
+            long value,
+            int[] tppoint,
+            float[] tppointYaw,
+            boolean candel
+    ) {
         this.name = name;
         this.prior = prior;
         this.world = worldName;
@@ -245,6 +263,138 @@ public class CoreRegion implements Serializable {
     public boolean canDelete() {
         return this.canDelete;
     }
+
+    protected abstract void checkParticle();
+
+    public abstract void notifyRemove();
+
+    public abstract void updateSigns();
+
+    protected abstract void updateSigns(String fname);
+
+    public abstract void clearLeaders();
+
+    public abstract void clearAdmins();
+
+    public abstract void clearMembers();
+
+    public abstract boolean isLeader(Player player);
+
+    public abstract boolean isAdmin(Player player);
+
+    public abstract boolean isMember(Player player);
+
+    public abstract boolean isLeader(String player);
+
+    public abstract boolean isAdmin(String player);
+
+    public abstract boolean isMember(String player);
+
+    /**
+     * Add an leader to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
+     *
+     * @param uuid - UUID or Player Name.
+     */
+    public abstract void addLeader(String uuid);
+
+    /**
+     * Add a member to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
+     *
+     * @param uuid - UUID or Player Name.
+     */
+    public abstract void addMember(String uuid);
+
+    public abstract void addAdmin(String uuid);
+
+    /**
+     * Remove an member to the Region. The string need to be UUID if Online Mode, or Player Name if Offline Mode.
+     *
+     * @param uuid - UUID or Player Name.
+     */
+    public abstract void removeMember(String uuid);
+
+    public abstract boolean getFlagBool(String key);
+
+    public abstract String getFlagString(String key);
+
+    public abstract boolean canSpawnWhiter();
+
+    public abstract int getMaxPlayers();
+
+    public abstract boolean isDeathAllowed();
+
+    /**
+     * Returns {@code true} if the region should be displayed on dynmap.
+     *
+     * @return {@code true} if the region should be displayed on dynmap;
+     * {@code false} otherwise
+     */
+    public abstract boolean allowDynmap();
+
+    /**
+     * Returns {@code true} if a player that dies in this region should keep its items upon respawn.
+     *
+     * @return {@code true} if a player that dies in this region should keep its items upon respawn;
+     * {@code false} otherwise
+     */
+    public abstract boolean isKeepInventory();
+
+    /**
+     * Returns {@code true} if a player that dies in this region should keep its exp levels upon respawn.
+     *
+     * @return {@code true} if a player that dies in this region should keep its exp levels upon respawn;
+     * {@code false} otherwise
+     */
+    public abstract boolean isKeepLevels();
+
+    public abstract boolean cmdOnHealth(Player p);
+
+    public abstract boolean canPlayerDamage();
+
+    public abstract boolean canHunger();
+
+    public abstract boolean canPlaceSign(Player p);
+
+    public abstract boolean canExit(Player p);
+
+    public abstract boolean canEnter(Player p);
+
+    public abstract boolean canExitWithItems(Player p);
+
+    public abstract boolean canEnterWithItems(Player p);
+
+    public abstract boolean denyEnterWithItems(Player p);
+
+    public abstract boolean canSkill(Player p);
+
+    public abstract boolean canBack(Player p);
+
+    public abstract boolean isPvPArena();
+
+    public abstract boolean allowMod(Player p);
+
+    public abstract boolean canEnterPortal(Player p);
+
+    public abstract boolean canExitPortal(Player p);
+
+    public abstract boolean canPet(Player p);
+
+    public abstract boolean canProjectiles(Player p);
+
+    public abstract boolean canDrop(Player p);
+
+    public abstract boolean canPickup(Player p);
+
+    public abstract boolean canCreatePortal();
+
+    public abstract boolean isCmdAllowed(Player p, String fullcmd);
+
+    public abstract boolean isCmdDenied(String fullcmd);
+
+    //---------------------- Player Flags --------------------------//
+    public abstract boolean canPressPlate(Player p);
+
+    public abstract boolean canBuild(Player player);
 
     /**
      * Get unique ID of region based on name of "region + @ + world".
@@ -346,7 +496,7 @@ public class CoreRegion implements Serializable {
     /**
      * Use this method to get raw leaders. This will return UUID if server running in Online mode. Will return player name in lowercase if Offline mode.
      * <p>
-     * To check if a player can build on this region use {@code canBuild(Player p)} instead this method.
+     * To check if a player can build on this region use {@link #canBuild(Player p)} instead this method.
      *
      * @return {@code Set<RedPlayer<String, String>>}
      */
@@ -467,4 +617,91 @@ public class CoreRegion implements Serializable {
         }
         return false;
     }
+
+    protected String getDesc(Collection<RedPlayer<String, String>> c) {
+        StringBuilder sb = new StringBuilder();
+        for (RedPlayer<String, String> leader : c) {
+            sb.append(", ").append(leader.getPlayerName());
+        }
+        return "[" + sb.substring(2) + "]";
+    }
+
+    public abstract boolean canLeavesDecay();
+
+
+    /**
+     * Check if the specified player can place a spawner in this region.
+     *
+     * @param p The player to check for permission.
+     * @return boolean if the player can place o not a spawner.
+     */
+
+    public abstract boolean canPlaceSpawner(Player p);
+
+    public abstract boolean canTeleport(Player p);
+
+    /**
+     * Allow players with fly enabled fly on this region.
+     *
+     * @return boolean
+     */
+    public abstract boolean canFly(Player p);
+
+    public abstract boolean canFlowDamage();
+
+    public abstract boolean canMobLoot();
+
+    public abstract boolean canGetEffects(Player p);
+
+    public abstract boolean canUsePotions(Player p);
+
+    public abstract boolean canPVP(Player attacker, Player defender);
+
+    public abstract boolean canOpenChest(Player p);
+
+    public abstract boolean canUseLever(Player p);
+
+    public abstract boolean canUseButton(Player p);
+
+    public abstract boolean canOpenDoor(Player p);
+
+    public abstract boolean canSpawnMonsters();
+
+    public abstract boolean canSpawnPassives();
+
+    public abstract boolean canPlaceVehicle(Player p);
+
+    public abstract boolean canInteractPassives(Player p);
+
+    public abstract boolean canFlow();
+
+    public abstract boolean canFire();
+
+    public abstract boolean isHomeAllowed(Player p);
+
+    public abstract boolean canGrow();
+
+    public abstract void setValue(long value);
+
+    protected abstract boolean canBypass(Player p);
+
+    /**
+     * Return a formatted string displaying the player name of the admins.
+     * <p>
+     * If there are no leader return the language string for no admins.
+     *
+     * @return A string starting with '[' and ending with ']' containing the player names
+     * of the admins separated by a comma and a space (", ").
+     */
+    public abstract String getAdminDesc();
+
+    /**
+     * Return a formatted string displaying the player name of the leaders.
+     * <p>
+     * If there are no leader it adds the default leader and return the list.
+     *
+     * @return A string starting with '[' and ending with ']' containing the player names
+     * of the leaders separated by a comma and a space (", ").
+     */
+    public abstract String getLeadersDesc();
 }

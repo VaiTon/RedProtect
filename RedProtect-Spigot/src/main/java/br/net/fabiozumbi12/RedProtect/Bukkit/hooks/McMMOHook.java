@@ -28,7 +28,6 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.hooks;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.datatypes.skills.SuperAbilityType;
@@ -67,7 +66,7 @@ public class McMMOHook implements Listener {
             event.setCancelled(true);
         }
 
-        if (RedProtect.get().config.configRoot().hooks.mcmmo.fix_acrobatics_fire_leveling && event.getSkill().equals(PrimarySkillType.ACROBATICS) && (!region.canFire() || !region.canDeath())) {
+        if (RedProtect.get().config.configRoot().hooks.mcmmo.fix_acrobatics_fire_leveling && event.getSkill().equals(PrimarySkillType.ACROBATICS) && (!region.canFire() || !region.isDeathAllowed())) {
             event.setCancelled(true);
         }
     }
