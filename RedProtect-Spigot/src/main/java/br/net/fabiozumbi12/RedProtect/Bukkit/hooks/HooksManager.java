@@ -54,6 +54,7 @@ public class HooksManager {
     public boolean Dyn;
     public DynmapHook dynmapHook;
 
+
     public void registerHooks() {
         bossBar = checkBM();
         myChunk = checkMyChunk();
@@ -218,7 +219,7 @@ public class HooksManager {
         Plugin pWe = Bukkit.getPluginManager().getPlugin("WorldEdit");
         if (pWe != null) {
             try {
-                int v = Integer.parseInt(pWe.getDescription().getVersion().split("\\.")[0]);
+                final int v = Integer.parseInt(pWe.getDescription().getVersion().split("\\.")[0]);
                 return (v >= 7) && pWe.isEnabled();
             } catch (Exception ignored) {
             }

@@ -28,17 +28,20 @@ package br.net.fabiozumbi12.RedProtect.Sponge.hooks;
 
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.plugin.PluginContainer;
+
+import java.util.Optional;
 
 public class HooksManager {
     public DynmapHook dynmapHook;
     public boolean WE;
     public boolean Dyn;
 
-    public void registerHooks(){
+    public void registerHooks() {
         WE = checkWE();
         Dyn = checkDM();
 
-        if (WE){
+        if (WE) {
             RedProtect.get().logger.info("WorldEdit found. Hooked.");
         }
 
@@ -56,9 +59,16 @@ public class HooksManager {
     }
 
     private boolean checkWE() {
-        return RedProtect.get().container.getDependencies().stream().anyMatch(d-> d.getId().equals("worldedit") &&
-                Sponge.getPluginManager().getPlugin("worldedit").isPresent() &&
-                Sponge.getPluginManager().getPlugin("worldedit").get().getVersion().get().startsWith("6.1.9"));
+        final Optional<PluginContainer> pWe = Sponge.getPluginManager().getPlugin("worldedit");
+        if (RedProtect.get().container.getDependencies().stream().anyMatch(d -> d.getId().equals("worldedit")) &&
+                pWe.isPresent()) {
+            final Optional<String> version = pWe.get().getVersion();
+            if (version.isPresent()) {
+                final int v = Integer.parseInt(version.get().split("\\.")[0]);
+                return v >= 7;
+            }
+        }
+        return false;
     }
 
     private boolean checkDM() {
