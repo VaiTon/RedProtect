@@ -31,7 +31,6 @@ import br.net.fabiozumbi12.RedProtect.Core.config.category.GlobalFlagsCategory;
 import br.net.fabiozumbi12.RedProtect.Core.config.category.MainCategory;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
-import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;

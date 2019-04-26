@@ -29,7 +29,6 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.hooks;
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
 import br.net.fabiozumbi12.RedProtect.Bukkit.actions.DefineRegionBuilder;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Bukkit.region.RegionBuilder;
 import com.sk89q.worldedit.*;
@@ -192,8 +191,11 @@ public class WEHook {
             }
 
             if (remove) {
-                region.notifyRemove();
-                RedProtect.get().rm.remove(region, RedProtect.get().getServer().getWorld(region.getWorld()));
+                final World regionWorld = RedProtect.get().getServer().getWorld(region.getWorld());
+                if (regionWorld != null) {
+                    region.notifyRemove();
+                    RedProtect.get().rm.remove(region, regionWorld);
+                }
             }
 
             if (delayCount % 50 == 0) {

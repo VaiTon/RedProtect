@@ -29,19 +29,11 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.config;
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Core.config.GuiLangCore;
-import br.net.fabiozumbi12.RedProtect.Core.config.LangCore;
-import br.net.fabiozumbi12.RedProtect.Core.helpers.Replacer;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-
-import static br.net.fabiozumbi12.RedProtect.Bukkit.commands.CommandHandlers.getCmd;
-import static br.net.fabiozumbi12.RedProtect.Bukkit.commands.CommandHandlers.getCmdAlias;
 
 public class LangGuiManager extends GuiLangCore {
 

@@ -427,7 +427,4 @@ public enum RPBukkitBlocks {
     WRITTEN_BOOK,
     YELLOW_FLOWER;
 
-    public Boolean equals(String type) {
-        return true;
-    }
 }

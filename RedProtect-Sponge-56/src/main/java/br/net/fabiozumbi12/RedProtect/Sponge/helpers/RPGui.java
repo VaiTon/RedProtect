@@ -29,7 +29,6 @@ package br.net.fabiozumbi12.RedProtect.Sponge.helpers;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.Replacer;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
-import br.net.fabiozumbi12.RedProtect.Sponge.config.LangManager;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
@@ -69,24 +68,23 @@ public class RPGui {
         if (maxSlots <= 9) {
             this.size = 9;
             this.guiItems = new ItemStack[this.size];
-        } else if (maxSlots >= 10 && maxSlots <= 18) {
+        } else if (maxSlots <= 18) {
             this.size = 18;
             this.guiItems = new ItemStack[this.size];
-        } else if (maxSlots >= 19 && maxSlots <= 27) {
+        } else if (maxSlots <= 27) {
             this.size = 27;
             this.guiItems = new ItemStack[this.size];
-        }
-        if (maxSlots >= 28 && maxSlots <= 36) {
+        } else if (maxSlots <= 36) {
             this.size = 36;
             this.guiItems = new ItemStack[this.size];
-        }
-        if (maxSlots >= 37 && maxSlots <= 45) {
+        } else if (maxSlots <= 45) {
             this.size = 45;
             this.guiItems = new ItemStack[this.size];
-        }
-        if (maxSlots >= 46 && maxSlots <= 54) {
+        } else if (maxSlots <= 54) {
             this.size = 54;
             this.guiItems = new ItemStack[this.size];
+        } else {
+            throw new IllegalArgumentException("Gui size cannot exceed 54 slots");
         }
 
         for (String flag : region.getFlags().keySet()) {
@@ -105,8 +103,8 @@ public class RPGui {
 
                     this.guiItems[i].offer(Keys.DISPLAY_NAME, RPUtil.toText(RedProtect.get().guiLang.getFlagName(flag)));
 
-                    List<Text> lore =  new ArrayList<>(Arrays.asList(
-                            RPUtil.toText(RedProtect.get().guiLang.getFlagString("value")+ " " + RedProtect.get().guiLang.getFlagString(region.getFlags().get(flag).toString())),
+                    List<Text> lore = new ArrayList<>(Arrays.asList(
+                            RPUtil.toText(RedProtect.get().guiLang.getFlagString("value") + " " + RedProtect.get().guiLang.getFlagString(region.getFlags().get(flag).toString())),
                             RPUtil.toText("&0" + flag)));
                     lore.addAll(RedProtect.get().guiLang.getFlagDescription(flag));
                     this.guiItems[i].offer(Keys.ITEM_LORE, lore);
@@ -284,11 +282,11 @@ public class RPGui {
     }
 
     public void open() {
-        for (Player player:Sponge.getServer().getOnlinePlayers()){
-            if (player.getOpenInventory().isPresent() && player.getOpenInventory().get().getName().get().equals(this.inv.getName().get())){
+        for (Player player : Sponge.getServer().getOnlinePlayers()) {
+            if (player.getOpenInventory().isPresent() && player.getOpenInventory().get().getName().get().equals(this.inv.getName().get())) {
                 Region r = RedProtect.get().rm.getTopRegion(player.getLocation(), this.getClass().getName());
-                if (r != null && r.equals(this.region) && !player.equals(this.player)){
-                    RedProtect.get().lang.sendMessage(this.player, "cmdmanager.region.rpgui-other", new Replacer[]{new Replacer("{player}",player.getName())});
+                if (r != null && r.equals(this.region) && !player.equals(this.player)) {
+                    RedProtect.get().lang.sendMessage(this.player, "cmdmanager.region.rpgui-other", new Replacer[]{new Replacer("{player}", player.getName())});
                     return;
                 }
             }

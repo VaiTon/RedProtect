@@ -521,10 +521,13 @@ public class AdminCommand implements CommandCallable {
                             }
                         }
                     }
-
-                    play.setLocation(loc);
-                    RedProtect.get().lang.sendMessage(play, RedProtect.get().lang.get("cmdmanager.region.tp") + " " + args[2]);
-                    sender.sendMessage(RPUtil.toText("&3Player teleported to " + args[2]));
+                    if (loc != null) {
+                        play.setLocation(loc);
+                        RedProtect.get().lang.sendMessage(play, RedProtect.get().lang.get("cmdmanager.region.tp") + " " + args[2]);
+                        sender.sendMessage(RPUtil.toText("&3Player teleported to " + args[2]));
+                    } else {
+                        sender.sendMessage(RPUtil.toText("Could not find a teleport location in region " + args[2]));
+                    }
                     return cmdr;
                 } else {
                     sender.sendMessage(RPUtil.toText(RedProtect.get().lang.get("cmdmanager.noplayer.thisname").replace("{player}", args[1])));
@@ -577,10 +580,11 @@ public class AdminCommand implements CommandCallable {
 
         if (args[0].equalsIgnoreCase("list-areas")) {
             int Page = 1;
-            if (args.length == 2){
+            if (args.length == 2) {
                 try {
                     Page = Integer.parseInt(args[1]);
-                } catch (Exception ignored){}
+                } catch (Exception ignored) {
+                }
             }
             sender.sendMessage(RPUtil.toText(RedProtect.get().lang.get("general.color") + "-------------------------------------------------"));
             int regionsPage = RedProtect.get().config.configRoot().region_settings.region_list.region_per_page;

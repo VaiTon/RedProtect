@@ -85,7 +85,7 @@ public class LangGuiManager extends GuiLangCore {
     }
 
     public List<Text> getFlagDescription(String flag) {
-        return Arrays.asList(getRaw("gui.flags." + flag + ".description").split("/n")).stream().map(RPUtil::toText).collect(Collectors.toList());
+        return Arrays.stream(getRaw("gui.flags." + flag + ".description").split("/n")).map(RPUtil::toText).collect(Collectors.toList());
     }
 
     public Text getFlagString(String key) {

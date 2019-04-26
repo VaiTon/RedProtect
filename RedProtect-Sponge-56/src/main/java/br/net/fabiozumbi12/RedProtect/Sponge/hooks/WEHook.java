@@ -29,22 +29,20 @@ package br.net.fabiozumbi12.RedProtect.Sponge.hooks;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
 import br.net.fabiozumbi12.RedProtect.Sponge.actions.DefineRegionBuilder;
-import br.net.fabiozumbi12.RedProtect.Sponge.config.LangManager;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Sponge.region.RegionBuilder;
 import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.sponge.SpongePlayer;
 import com.sk89q.worldedit.sponge.SpongeWorld;
 import com.sk89q.worldedit.sponge.SpongeWorldEdit;
-import com.sk89q.worldedit.util.io.Closer;
-import com.sk89q.worldedit.world.registry.WorldData;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandSource;
@@ -54,7 +52,6 @@ import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -76,8 +73,8 @@ public class WEHook {
 
     private static void setSelection(SpongeWorld ws, Player p, Location pos1, Location pos2) {
         RegionSelector regs = SpongeWorldEdit.inst().getSession(p).getRegionSelector(ws);
-        regs.selectPrimary(new Vector(pos1.getX(),pos1.getY(),pos1.getZ()), null);
-        regs.selectSecondary(new Vector(pos2.getX(),pos2.getY(),pos2.getZ()), null);
+        regs.selectPrimary(BlockVector3.at(pos1.getX(), pos1.getY(), pos1.getZ()), null);
+        regs.selectSecondary(BlockVector3.at(pos2.getX(), pos2.getY(), pos2.getZ()), null);
         SpongeWorldEdit.inst().getSession(p).setRegionSelector(ws, regs);
         RedProtect.get().lang.sendMessage(p, RedProtect.get().lang.get("cmdmanager.region.select-we.show")
                 .replace("{pos1}", pos1.getBlockX() + "," + pos1.getBlockY() + "," + pos1.getBlockZ())
@@ -104,7 +101,7 @@ public class WEHook {
     }
 
     public static Region pasteWithWE(Player p, File file) {
-        Location loc = p.getLocation();
+        Location<World> loc = p.getLocation();
         Region r = null;
 
         if (p.getLocation().getBlockRelative(Direction.DOWN).getBlock().getType().equals(BlockTypes.WATER) ||
@@ -113,27 +110,20 @@ public class WEHook {
             return null;
         }
 
-        SpongePlayer sp = SpongeWorldEdit.inst().wrapPlayer(p);
-        SpongeWorld ws = SpongeWorldEdit.inst().getWorld(p.getWorld());
+        ClipboardFormat format = ClipboardFormats.findByFile(file);
+        if (format == null) {
+            RedProtect.get().lang.sendMessage(p, "playerlistener.region.copyfail");
+            return null;
+        }
+        try (ClipboardReader reader = format.getReader(new FileInputStream(file))) {
+            Clipboard clipboard = reader.read();
 
-        LocalSession session = SpongeWorldEdit.inst().getSession(p);
 
-        Closer closer = Closer.create();
-        try  {
-            ClipboardFormat format = ClipboardFormat.findByAlias("schematic");
-            FileInputStream fis = closer.register(new FileInputStream(file));
-            BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
-            ClipboardReader reader = format.getReader(bis);
+            BlockVector3 bmin = clipboard.getMinimumPoint();
+            BlockVector3 bmax = clipboard.getMaximumPoint();
 
-            WorldData worldData = ws.getWorldData();
-            Clipboard clipboard = reader.read(ws.getWorldData());
-            session.setClipboard(new ClipboardHolder(clipboard, worldData));
-
-            Vector bmin = clipboard.getMinimumPoint();
-            Vector bmax = clipboard.getMaximumPoint();
-
-            Location min = loc.add(bmin.getX(), bmin.getY(), bmin.getZ());
-            Location max = loc.add(bmax.getX(), bmax.getY(), bmax.getZ());
+            Location<World> min = loc.add(bmin.getX(), bmin.getY(), bmin.getZ());
+            Location<World> max = loc.add(bmax.getX(), bmax.getY(), bmax.getZ());
 
             String leader = p.getUniqueId().toString();
             if (!RedProtect.get().config.configRoot().online_mode) {
@@ -146,56 +136,65 @@ public class WEHook {
                 r = rb2.build();
             }
 
-            ClipboardHolder holder = session.getClipboard();
-
-            Operation op = holder.createPaste(session.createEditSession(sp), ws.getWorldData()).to(session.getPlacementPosition(sp)).build();
-            Operations.completeLegacy(op);
-        } catch (IOException | EmptyClipboardException | IncompleteRegionException | MaxChangedBlocksException e) {
+            try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().
+                    getEditSession(SpongeWorldEdit.inst().getWorld(p.getWorld()), -1)) {
+                Operation operation = new ClipboardHolder(clipboard)
+                        .createPaste(editSession)
+                        .to(BlockVector3.at(loc.getX(), loc.getY(), loc.getZ()))
+                        .ignoreAirBlocks(false)
+                        .build();
+                Operations.complete(operation);
+            } catch (WorldEditException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         return r;
     }
 
-    public static void regenRegion(final Region r, final World w, final Location<World> p1, final Location<World> p2, final int delay, final CommandSource sender, final boolean remove) {
+    public static void regenRegion(final Region region, final World world, final Location<World> p1, final Location<World> p2, final int delay, final CommandSource sender, final boolean remove) {
         Sponge.getScheduler().createSyncExecutor(RedProtect.get().container).schedule(() -> {
             if (RPUtil.stopRegen) {
                 return;
             }
 
-            RegionSelector regs = new LocalSession().getRegionSelector(SpongeWorldEdit.inst().getWorld(w));
-            regs.selectPrimary(new Vector(p1.getX(), p1.getY(), p1.getZ()), null);
-            regs.selectSecondary(new Vector(p2.getX(), p2.getY(), p2.getZ()), null);
+            RegionSelector selector = new LocalSession().getRegionSelector(SpongeWorldEdit.inst().getWorld(world));
+            selector.selectPrimary(BlockVector3.at(p1.getX(), p1.getY(), p1.getZ()), null);
+            selector.selectSecondary(BlockVector3.at(p2.getX(), p2.getY(), p2.getZ()), null);
 
             com.sk89q.worldedit.regions.Region wreg = null;
             try {
-                wreg = regs.getRegion();
+                wreg = selector.getRegion();
             } catch (IncompleteRegionException e1) {
                 e1.printStackTrace();
             }
 
-            EditSession esession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(SpongeWorldEdit.inst().getWorld(w), -1);
+            EditSession session = WorldEdit.getInstance().getEditSessionFactory().getEditSession(SpongeWorldEdit.inst().getWorld(world), -1);
 
-            eSessions.put(r.getID(), esession);
+            eSessions.put(region.getID(), session);
             int delayCount = 1 + delay / 10;
 
             if (sender != null) {
-                if (wreg.getWorld().regenerate(wreg, esession)) {
-                    RedProtect.get().lang.sendMessage(sender, "[" + delayCount + "]" + " &aRegion " + r.getID().split("@")[0] + " regenerated with success!");
+                if (SpongeWorldEdit.inst().getWorld(world).regenerate(wreg, session)) {
+                    RedProtect.get().lang.sendMessage(sender, "[" + delayCount + "]" + " &aRegion " + region.getID().split("@")[0] + " regenerated with success!");
                 } else {
-                    RedProtect.get().lang.sendMessage(sender, "[" + delayCount + "]" + " &cTheres an error when regen the region " + r.getID().split("@")[0] + "!");
+                    RedProtect.get().lang.sendMessage(sender, "[" + delayCount + "]" + " &cTheres an error when regen the region " + region.getID().split("@")[0] + "!");
                 }
             } else {
-                if (wreg.getWorld().regenerate(wreg, esession)) {
-                    RedProtect.get().logger.warning("[" + delayCount + "]" + " &aRegion " + r.getID().split("@")[0] + " regenerated with success!");
+                if (SpongeWorldEdit.inst().getWorld(world).regenerate(wreg, session)) {
+                    RedProtect.get().logger.warning("[" + delayCount + "]" + " &aRegion " + region.getID().split("@")[0] + " regenerated with success!");
                 } else {
-                    RedProtect.get().logger.warning("[" + delayCount + "]" + " &cTheres an error when regen the region " + r.getID().split("@")[0] + "!");
+                    RedProtect.get().logger.warning("[" + delayCount + "]" + " &cTheres an error when regen the region " + region.getID().split("@")[0] + "!");
                 }
             }
 
             if (remove) {
-                r.notifyRemove();
-                RedProtect.get().rm.remove(r, RedProtect.get().getServer().getWorld(r.getWorld()).get());
+                RedProtect.get().getServer().getWorld(region.getWorld()).ifPresent(regionWorld -> {
+                    region.notifyRemove();
+                    RedProtect.get().rm.remove(region, regionWorld);
+                });
             }
 
             if (delayCount % 50 == 0) {

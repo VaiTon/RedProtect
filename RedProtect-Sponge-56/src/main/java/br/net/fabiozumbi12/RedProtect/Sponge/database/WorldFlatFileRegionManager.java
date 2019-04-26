@@ -26,9 +26,9 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.database;
 
+import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
-import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -60,14 +60,15 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
 
             if (!RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
                 if (RedProtect.get().config.configRoot().flat_file.region_per_file) {
-                    File f = new File(RedProtect.get().configDir, "data" + File.separator + world);
-                    if (!f.exists()) {
-                        f.mkdir();
-                    }
-                    File[] listOfFiles = f.listFiles();
-                    for (File region : listOfFiles) {
-                        if (region.getName().endsWith(".conf")) {
-                            this.load(region.getPath());
+                    File worldDataDir = new File(RedProtect.get().configDir, "data" + File.separator + world);
+                    if (!worldDataDir.isDirectory()) {
+                        worldDataDir.mkdir();
+                    } else {
+                        File[] listOfFiles = worldDataDir.listFiles();
+                        for (File region : listOfFiles) {
+                            if (region.getName().endsWith(".conf")) {
+                                this.load(region.getPath());
+                            }
                         }
                     }
                 } else {
