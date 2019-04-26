@@ -40,7 +40,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("deprecation")
-public class WorldMySQLRegionManager implements WorldRegionManager {
+public class SpongeWorldMySQLRegionManager implements SpongeWorldRegionManager {
 
     private final String url = "jdbc:mysql://" + RedProtect.get().config.configRoot().mysql.host + "/";
     private final String reconnect = "?autoReconnect=true";
@@ -50,7 +50,7 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
     private final World world;
     private Connection dbcon;
 
-    public WorldMySQLRegionManager(World world) throws SQLException {
+    public SpongeWorldMySQLRegionManager(World world) throws SQLException {
         super();
         this.regions = new HashMap<>();
         this.world = world;
@@ -563,6 +563,11 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
             e.printStackTrace();
         }
         return regionl;
+    }
+
+    @Override
+    public Set<Region> getInnerRegions(Region region) {
+        return null;
     }
 
     @Override

@@ -26,12 +26,12 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.region;
 
+import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
 import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
-import br.net.fabiozumbi12.RedProtect.Sponge.database.WorldFlatFileRegionManager;
-import br.net.fabiozumbi12.RedProtect.Sponge.database.WorldMySQLRegionManager;
-import br.net.fabiozumbi12.RedProtect.Sponge.database.WorldRegionManager;
-import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
+import br.net.fabiozumbi12.RedProtect.Sponge.database.SpongeWorldFlatFileRegionManager;
+import br.net.fabiozumbi12.RedProtect.Sponge.database.SpongeWorldMySQLRegionManager;
+import br.net.fabiozumbi12.RedProtect.Sponge.database.SpongeWorldRegionManager;
 import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Sponge.hooks.WEHook;
 import com.flowpowered.math.vector.Vector3i;
@@ -48,7 +48,7 @@ import java.util.*;
  */
 public class RegionManager {
 
-    private final HashMap<World, WorldRegionManager> regionManagers;
+    private final HashMap<World, SpongeWorldRegionManager> regionManagers;
     private final HashMap<Vector3i, Region> bLoc = new HashMap<>();
 
     public RegionManager() {
@@ -65,11 +65,11 @@ public class RegionManager {
         if (this.regionManagers.containsKey(w)) {
             return;
         }
-        WorldRegionManager mgr;
+        SpongeWorldRegionManager mgr;
         if (RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
-            mgr = new WorldMySQLRegionManager(w);
+            mgr = new SpongeWorldMySQLRegionManager(w);
         } else {
-            mgr = new WorldFlatFileRegionManager(w);
+            mgr = new SpongeWorldFlatFileRegionManager(w);
         }
         mgr.load();
         this.regionManagers.put(w, mgr);
@@ -90,7 +90,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return;
         }
-        WorldRegionManager mgr = this.regionManagers.get(w);
+        SpongeWorldRegionManager mgr = this.regionManagers.get(w);
         mgr.save(false);
         mgr.closeConn();
         this.regionManagers.remove(w);
@@ -98,7 +98,7 @@ public class RegionManager {
 
     public int saveAll(boolean force) {
         int saved = 0;
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpongeWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             saved = worldRegionManager.save(force) + saved;
         }
         return saved;
@@ -125,11 +125,11 @@ public class RegionManager {
         Optional<World> w = Sponge.getServer().getWorld(world);
         int size = 0;
         if (RedProtect.get().config.configRoot().region_settings.blocklimit_per_world && w.isPresent()) {
-            WorldRegionManager rms = this.regionManagers.get(w.get());
+            SpongeWorldRegionManager rms = this.regionManagers.get(w.get());
             size = rms.getTotalRegionSize(uuid);
         } else {
             for (World wr : Sponge.getServer().getWorlds()) {
-                WorldRegionManager rms = this.regionManagers.get(wr);
+                SpongeWorldRegionManager rms = this.regionManagers.get(wr);
                 size += rms.getTotalRegionSize(uuid);
             }
         }
@@ -151,7 +151,7 @@ public class RegionManager {
      */
     public Set<Region> getRegions(String uuid) {
         Set<Region> ret = new HashSet<>();
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpongeWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             ret.addAll(worldRegionManager.getRegions(uuid));
         }
         return ret;
@@ -167,7 +167,7 @@ public class RegionManager {
      */
     public Set<Region> getMemberRegions(String uuid) {
         Set<Region> ret = new HashSet<>();
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpongeWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             ret.addAll(worldRegionManager.getMemberRegions(uuid));
         }
         return ret;
@@ -217,7 +217,7 @@ public class RegionManager {
 
     public void remove(Region r, World w) {
         r.notifyRemove();
-        WorldRegionManager rms = this.regionManagers.get(w);
+        SpongeWorldRegionManager rms = this.regionManagers.get(w);
         rms.remove(r);
         removeCache(r);
         if (RedProtect.get().hooks.Dyn && RedProtect.get().config.configRoot().hooks.dynmap.enable) {
@@ -261,7 +261,7 @@ public class RegionManager {
             if (!this.regionManagers.containsKey(loc.getExtent())) {
                 return null;
             }
-            WorldRegionManager rm = this.regionManagers.get(loc.getExtent());
+            SpongeWorldRegionManager rm = this.regionManagers.get(loc.getExtent());
             Region r = rm.getTopRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
             try {
                 bLoc.entrySet().removeIf(k -> k.getValue().equals(r));
@@ -295,13 +295,13 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpongeWorldRegionManager rm = this.regionManagers.get(w);
         return rm.getLowRegion(x, y, z);
     }
 
     public int removeAll(String player) {
         int qtd = 0;
-        for (WorldRegionManager wrm : this.regionManagers.values()) {
+        for (SpongeWorldRegionManager wrm : this.regionManagers.values()) {
             for (Region r : wrm.getRegions(player)) {
                 r.notifyRemove();
                 wrm.remove(r);
@@ -333,7 +333,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(loc.getExtent())) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(loc.getExtent());
+        SpongeWorldRegionManager rm = this.regionManagers.get(loc.getExtent());
         return rm.getLowRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
@@ -346,7 +346,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpongeWorldRegionManager rm = this.regionManagers.get(w);
         return rm.getGroupRegion(x, y, z);
     }
 
@@ -359,51 +359,51 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(loc.getExtent())) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(loc.getExtent());
+        SpongeWorldRegionManager rm = this.regionManagers.get(loc.getExtent());
         return rm.getGroupRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
     public Set<Region> getAllRegions() {
         Set<Region> regions = new HashSet<>();
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpongeWorldRegionManager rm = this.regionManagers.get(w);
             regions.addAll(rm.getAllRegions());
         }
         return regions;
     }
 
     public Set<Region> getRegionsByWorld(World w) {
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpongeWorldRegionManager rm = this.regionManagers.get(w);
         return new HashSet<>(rm.getAllRegions());
     }
 
     public void clearDB() {
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpongeWorldRegionManager rm = this.regionManagers.get(w);
             rm.clearRegions();
         }
         this.regionManagers.clear();
     }
 
     public void updateLiveRegion(Region r, String columm, Object value) {
-        WorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
+        SpongeWorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
         rm.updateLiveRegion(r.getName(), columm, value);
     }
 
     public void updateLiveFlags(Region r, String flag, String value) {
-        WorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
+        SpongeWorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
         rm.updateLiveFlags(r.getName(), flag, value);
     }
 
     public void removeLiveFlags(Region r, String flag) {
-        WorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
+        SpongeWorldRegionManager rm = this.regionManagers.get(Sponge.getServer().getWorld(r.getWorld()).get());
         rm.removeLiveFlags(r.getName(), flag);
     }
 
     public int getTotalRegionsNum() {
         int total = 0;
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpongeWorldRegionManager rm = this.regionManagers.get(w);
             total = total + rm.getTotalRegionNum();
         }
         return total;

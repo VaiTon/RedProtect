@@ -26,12 +26,13 @@
 
 package br.net.fabiozumbi12.RedProtect.Sponge.database;
 
+import br.net.fabiozumbi12.RedProtect.Core.database.WorldRegionManager;
 import br.net.fabiozumbi12.RedProtect.Sponge.Region;
 
 import java.util.Map;
 import java.util.Set;
 
-public interface WorldRegionManager {
+public interface SpongeWorldRegionManager extends WorldRegionManager<Region> {
 
     void load();
 

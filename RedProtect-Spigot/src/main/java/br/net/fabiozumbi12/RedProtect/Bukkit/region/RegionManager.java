@@ -28,9 +28,9 @@ package br.net.fabiozumbi12.RedProtect.Bukkit.region;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
-import br.net.fabiozumbi12.RedProtect.Bukkit.database.WorldFlatFileRegionManager;
-import br.net.fabiozumbi12.RedProtect.Bukkit.database.WorldMySQLRegionManager;
-import br.net.fabiozumbi12.RedProtect.Bukkit.database.WorldRegionManager;
+import br.net.fabiozumbi12.RedProtect.Bukkit.database.SpigotWorldFlatFileRegionManager;
+import br.net.fabiozumbi12.RedProtect.Bukkit.database.SpigotWorldMySQLRegionManager;
+import br.net.fabiozumbi12.RedProtect.Bukkit.database.SpigotWorldRegionManager;
 import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Bukkit.hooks.WEHook;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
@@ -48,7 +48,7 @@ import java.util.*;
  */
 public class RegionManager {
 
-    private final HashMap<World, WorldRegionManager> regionManagers;
+    private final HashMap<World, SpigotWorldRegionManager> regionManagers;
     private final HashMap<Location, Region> bLoc = new HashMap<>();
 
     public RegionManager() {
@@ -65,11 +65,11 @@ public class RegionManager {
         if (this.regionManagers.containsKey(w)) {
             return;
         }
-        WorldRegionManager mgr;
+        SpigotWorldRegionManager mgr;
         if (RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
-            mgr = new WorldMySQLRegionManager(w);
+            mgr = new SpigotWorldMySQLRegionManager(w);
         } else {
-            mgr = new WorldFlatFileRegionManager(w);
+            mgr = new SpigotWorldFlatFileRegionManager(w);
         }
         mgr.load();
         this.regionManagers.put(w, mgr);
@@ -90,7 +90,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return;
         }
-        WorldRegionManager mgr = this.regionManagers.get(w);
+        SpigotWorldRegionManager mgr = this.regionManagers.get(w);
         mgr.save(false);
         mgr.closeConn();
         this.regionManagers.remove(w);
@@ -98,7 +98,7 @@ public class RegionManager {
 
     public int saveAll(boolean force) {
         int saved = 0;
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpigotWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             saved = worldRegionManager.save(force) + saved;
         }
         return saved;
@@ -128,11 +128,11 @@ public class RegionManager {
         }
         int size = 0;
         if (RedProtect.get().config.configRoot().region_settings.blocklimit_per_world) {
-            WorldRegionManager rms = this.regionManagers.get(w);
+            SpigotWorldRegionManager rms = this.regionManagers.get(w);
             size = rms.getTotalRegionSize(uuid);
         } else {
             for (World wr : Bukkit.getWorlds()) {
-                WorldRegionManager rms = this.regionManagers.get(wr);
+                SpigotWorldRegionManager rms = this.regionManagers.get(wr);
                 size += rms.getTotalRegionSize(uuid);
             }
         }
@@ -149,7 +149,7 @@ public class RegionManager {
      */
     public Set<Region> getRegions(String uuid) {
         Set<Region> ret = new HashSet<>();
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpigotWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             ret.addAll(worldRegionManager.getRegions(uuid));
         }
         return ret;
@@ -165,7 +165,7 @@ public class RegionManager {
      */
     public Set<Region> getMemberRegions(String uuid) {
         Set<Region> ret = new HashSet<>();
-        for (WorldRegionManager worldRegionManager : this.regionManagers.values()) {
+        for (SpigotWorldRegionManager worldRegionManager : this.regionManagers.values()) {
             ret.addAll(worldRegionManager.getMemberRegions(uuid));
         }
         return ret;
@@ -229,7 +229,7 @@ public class RegionManager {
 
     public void remove(Region r, World w) {
         r.notifyRemove();
-        WorldRegionManager rms = this.regionManagers.get(w);
+        SpigotWorldRegionManager rms = this.regionManagers.get(w);
         rms.remove(r);
         removeCache(r);
         if (RedProtect.get().hooks.Dyn && RedProtect.get().config.configRoot().hooks.dynmap.enable) {
@@ -265,7 +265,7 @@ public class RegionManager {
 
     public int removeAll(String player) {
         int qtd = 0;
-        for (WorldRegionManager wrm : this.regionManagers.values()) {
+        for (SpigotWorldRegionManager wrm : this.regionManagers.values()) {
             for (Region r : wrm.getRegions(player)) {
                 r.notifyRemove();
                 wrm.remove(r);
@@ -303,7 +303,7 @@ public class RegionManager {
                 return null;
             }
 
-            WorldRegionManager rm = this.regionManagers.get(loc.getWorld());
+            SpigotWorldRegionManager rm = this.regionManagers.get(loc.getWorld());
             Region r = rm.getTopRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
             try {
                 bLoc.entrySet().removeIf(k -> k.getValue().equals(r));
@@ -346,7 +346,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpigotWorldRegionManager rm = this.regionManagers.get(w);
         return rm.getLowRegion(x, y, z);
     }
 
@@ -360,7 +360,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(loc.getWorld())) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(loc.getWorld());
+        SpigotWorldRegionManager rm = this.regionManagers.get(loc.getWorld());
         return rm.getLowRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
@@ -377,7 +377,7 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(w)) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpigotWorldRegionManager rm = this.regionManagers.get(w);
         return rm.getGroupRegion(x, y, z);
     }
 
@@ -390,51 +390,51 @@ public class RegionManager {
         if (!this.regionManagers.containsKey(loc.getWorld())) {
             return null;
         }
-        WorldRegionManager rm = this.regionManagers.get(loc.getWorld());
+        SpigotWorldRegionManager rm = this.regionManagers.get(loc.getWorld());
         return rm.getGroupRegion(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
     public Set<Region> getAllRegions() {
         Set<Region> regions = new HashSet<>();
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpigotWorldRegionManager rm = this.regionManagers.get(w);
             regions.addAll(rm.getAllRegions());
         }
         return regions;
     }
 
     public Set<Region> getRegionsByWorld(World w) {
-        WorldRegionManager rm = this.regionManagers.get(w);
+        SpigotWorldRegionManager rm = this.regionManagers.get(w);
         return rm.getAllRegions();
     }
 
     public void clearDB() {
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpigotWorldRegionManager rm = this.regionManagers.get(w);
             rm.clearRegions();
         }
         this.regionManagers.clear();
     }
 
     public void updateLiveRegion(Region r, String columm, Object value) {
-        WorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
+        SpigotWorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
         rm.updateLiveRegion(r.getName(), columm, value);
     }
 
     public void updateLiveFlags(Region r, String flag, String value) {
-        WorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
+        SpigotWorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
         rm.updateLiveFlags(r.getName(), flag, value);
     }
 
     public void removeLiveFlags(Region r, String flag) {
-        WorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
+        SpigotWorldRegionManager rm = this.regionManagers.get(Bukkit.getWorld(r.getWorld()));
         rm.removeLiveFlags(r.getName(), flag);
     }
 
     public int getTotalRegionsNum() {
         int total = 0;
         for (World w : RedProtect.get().getServer().getWorlds()) {
-            WorldRegionManager rm = this.regionManagers.get(w);
+            SpigotWorldRegionManager rm = this.regionManagers.get(w);
             total = total + rm.getTotalRegionNum();
         }
         return total;

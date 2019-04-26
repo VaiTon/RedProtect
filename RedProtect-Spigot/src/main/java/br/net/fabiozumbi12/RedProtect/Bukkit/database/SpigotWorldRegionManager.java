@@ -27,11 +27,12 @@
 package br.net.fabiozumbi12.RedProtect.Bukkit.database;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
+import br.net.fabiozumbi12.RedProtect.Core.database.WorldRegionManager;
 
 import java.util.Map;
 import java.util.Set;
 
-public interface WorldRegionManager {
+public interface SpigotWorldRegionManager extends WorldRegionManager<Region> {
 
     void load();
 

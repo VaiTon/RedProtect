@@ -24,28 +24,26 @@
  * 3 - Este aviso não pode ser removido ou alterado de qualquer distribuição de origem.
  */
 
-package br.net.fabiozumbi12.RedProtect.Sponge.database;
+package br.net.fabiozumbi12.RedProtect.Bukkit.database;
 
+import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
+import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
+import br.net.fabiozumbi12.RedProtect.Bukkit.helpers.RPUtil;
 import br.net.fabiozumbi12.RedProtect.Core.helpers.LogLevel;
-import br.net.fabiozumbi12.RedProtect.Sponge.RedProtect;
-import br.net.fabiozumbi12.RedProtect.Sponge.Region;
-import br.net.fabiozumbi12.RedProtect.Sponge.helpers.RPUtil;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.spongepowered.api.world.World;
+import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-public class WorldFlatFileRegionManager implements WorldRegionManager {
+public class SpigotWorldFlatFileRegionManager implements SpigotWorldRegionManager {
 
     private final HashMap<String, Region> regions;
     private final World world;
 
-    public WorldFlatFileRegionManager(World world) {
+    public SpigotWorldFlatFileRegionManager(World world) {
         super();
         this.regions = new HashMap<>();
         this.world = world;
@@ -53,32 +51,31 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
 
     @Override
     public void load() {
-
         try {
             String world = this.getWorld().getName();
             RedProtect.get().logger.info("- Loading " + world + "'s regions...");
 
-            if (!RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
+            if (!RedProtect.get().config.configRoot().file_type.equals("mysql")) {
                 if (RedProtect.get().config.configRoot().flat_file.region_per_file) {
-                    File worldDataDir = new File(RedProtect.get().configDir, "data" + File.separator + world);
-                    if (!worldDataDir.isDirectory()) {
-                        worldDataDir.mkdir();
-                    } else {
-                        File[] listOfFiles = worldDataDir.listFiles();
-                        for (File region : listOfFiles) {
-                            if (region.getName().endsWith(".conf")) {
-                                this.load(region.getPath());
-                            }
+                    File f = new File(RedProtect.get().getDataFolder(), "data" + File.separator + world);
+                    if (!f.exists()) {
+                        f.mkdir();
+                    }
+                    File[] listOfFiles = f.listFiles();
+                    for (File region : listOfFiles) {
+                        if (region.getName().endsWith(".yml")) {
+                            this.load(region.getPath());
                         }
                     }
                 } else {
-                    File oldf = new File(RedProtect.get().configDir + File.separator + "data" + File.separator + world + ".conf");
-                    File newf = new File(RedProtect.get().configDir + File.separator + "data" + File.separator + "data_" + world + ".conf");
+                    File oldf = new File(RedProtect.get().getDataFolder(), "data" + File.separator + world + ".yml");
+                    File newf = new File(RedProtect.get().getDataFolder(), "data" + File.separator + "data_" + world + ".yml");
                     if (oldf.exists()) {
                         oldf.renameTo(newf);
                     }
-                    this.load(RedProtect.get().configDir + File.separator + "data" + File.separator + "data_" + world + ".conf");
+                    this.load(RedProtect.get().getDataFolder() + File.separator + "data" + File.separator + "data_" + world + ".yml");
                 }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,31 +83,34 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
     }
 
     private void load(String path) {
-        World world = this.getWorld();
-
-        if (!RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
-            RedProtect.get().logger.debug(LogLevel.DEFAULT, "Load world " + this.world.getName() + ". File type: conf");
-
+        File f = new File(path);
+        if (!f.exists()) {
             try {
-                File tempRegionFile = new File(path);
-                if (!tempRegionFile.exists()) {
-                    tempRegionFile.createNewFile();
-                }
-
-                ConfigurationLoader<CommentedConfigurationNode> regionManager = HoconConfigurationLoader.builder().setPath(tempRegionFile.toPath()).build();
-                CommentedConfigurationNode region = regionManager.load();
-
-                for (Object key : region.getChildrenMap().keySet()) {
-                    String rname = key.toString();
-                    if (!region.getNode(rname).hasMapChildren()) {
-                        continue;
-                    }
-                    Region newr = RPUtil.loadRegion(region, rname, world);
-                    newr.setToSave(false);
-                    regions.put(rname, newr);
-                }
-            } catch (IOException | ObjectMappingException e) {
+                f.createNewFile();
+            } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+
+        if (!RedProtect.get().config.configRoot().file_type.equals("mysql")) {
+            YamlConfiguration fileDB = new YamlConfiguration();
+            RedProtect.get().logger.debug(LogLevel.DEFAULT, "Load world " + this.world.getName() + ". File type: yml");
+            try {
+                fileDB.load(f);
+            } catch (FileNotFoundException e) {
+                RedProtect.get().logger.severe("DB file not found!");
+                RedProtect.get().logger.severe("File:" + f.getName());
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            for (String rname : fileDB.getKeys(false)) {
+                Region newr = RPUtil.loadRegion(fileDB, rname, this.world);
+                if (newr == null) return;
+
+                newr.setToSave(false);
+                add(newr);
             }
         }
     }
@@ -121,13 +121,12 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
         try {
             RedProtect.get().logger.debug(LogLevel.DEFAULT, "RegionManager.Save(): File type is " + RedProtect.get().config.configRoot().file_type);
             String world = this.getWorld().getName();
+            File datf;
 
-            if (!RedProtect.get().config.configRoot().file_type.equalsIgnoreCase("mysql")) {
-
-                File datf = new File(RedProtect.get().configDir + File.separator + "data", "data_" + world + ".conf");
-                ConfigurationLoader<CommentedConfigurationNode> regionManager = HoconConfigurationLoader.builder().setPath(datf.toPath()).build();
-                CommentedConfigurationNode fileDB = regionManager.createEmptyNode();
-                Set<CommentedConfigurationNode> dbs = new HashSet<>();
+            if (!RedProtect.get().config.configRoot().file_type.equals("mysql")) {
+                datf = new File(RedProtect.get().getDataFolder() + File.separator + "data", "data_" + world + ".yml");
+                YamlConfiguration fileDB = new YamlConfiguration();
+                Set<YamlConfiguration> yamls = new HashSet<>();
                 for (Region r : regions.values()) {
                     if (r.getName() == null) {
                         continue;
@@ -137,31 +136,30 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
                         if (!r.toSave() && !force) {
                             continue;
                         }
-                        datf = new File(RedProtect.get().configDir + File.separator + "data", world + File.separator + r.getName() + ".conf");
-                        regionManager = HoconConfigurationLoader.builder().setPath(datf.toPath()).build();
-                        fileDB = regionManager.createEmptyNode();
+                        fileDB = new YamlConfiguration();
+                        datf = new File(RedProtect.get().getDataFolder() + File.separator + "data", world + File.separator + r.getName() + ".yml");
                     }
 
                     RPUtil.addProps(fileDB, r);
                     saved++;
 
                     if (RedProtect.get().config.configRoot().flat_file.region_per_file) {
-                        dbs.add(fileDB);
-                        saveConf(fileDB, regionManager);
+                        yamls.add(fileDB);
+                        saveYaml(fileDB, datf);
                         r.setToSave(false);
                     }
                 }
 
                 if (!RedProtect.get().config.configRoot().flat_file.region_per_file) {
-                    saveConf(fileDB, regionManager);
+                    saveYaml(fileDB, datf);
                 } else {
                     //remove deleted regions
-                    File wfolder = new File(RedProtect.get().configDir + File.separator + "data", world);
+                    File wfolder = new File(RedProtect.get().getDataFolder() + File.separator + "data", world);
                     if (wfolder.exists()) {
                         File[] listOfFiles = wfolder.listFiles();
                         if (listOfFiles != null) {
                             for (File region : listOfFiles) {
-                                if (region.isFile() && !regions.containsKey(region.getName().replace(".conf", ""))) {
+                                if (region.isFile() && !regions.containsKey(region.getName().replace(".yml", ""))) {
                                     region.delete();
                                 }
                             }
@@ -174,9 +172,9 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
                 //try backup
                 if (force && RedProtect.get().config.configRoot().flat_file.backup) {
                     if (!RedProtect.get().config.configRoot().flat_file.region_per_file) {
-                        RPUtil.backupRegions(Collections.singleton(fileDB), world, "data_" + world + ".conf");
+                        RPUtil.backupRegions(Collections.singleton(fileDB), world, "data_" + world + ".yml");
                     } else {
-                        RPUtil.backupRegions(dbs, world, null);
+                        RPUtil.backupRegions(yamls, world, null);
                     }
                 }
             }
@@ -186,9 +184,9 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
         return saved;
     }
 
-    private void saveConf(CommentedConfigurationNode fileDB, ConfigurationLoader<CommentedConfigurationNode> regionManager) {
+    private void saveYaml(YamlConfiguration fileDB, File file) {
         try {
-            regionManager.save(fileDB);
+            fileDB.save(file);
         } catch (IOException e) {
             RedProtect.get().logger.severe("Error during save database file for world " + world + ": ");
             e.printStackTrace();
@@ -196,13 +194,15 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
     }
 
     @Override
-    public void add(Region r) {
-        this.regions.put(r.getName(), r);
+    public void add(Region region) {
+        regions.put(region.getName(), region);
     }
 
     @Override
-    public void remove(Region r) {
-        this.regions.remove(r.getName());
+    public void remove(Region region) {
+        if (regions.containsValue(region)) {
+            regions.remove(region.getName());
+        }
     }
 
     @Override
@@ -266,13 +266,34 @@ public class WorldFlatFileRegionManager implements WorldRegionManager {
     }
 
     @Override
-    public Set<Region> getRegions(int x, int y, int z) {
+    public Set<Region> getInnerRegions(Region region) {
         Set<Region> regionl = new HashSet<>();
-        for (Region r : regions.values()) {
-            if (x <= r.getMaxMbrX() && x >= r.getMinMbrX() && y <= r.getMaxY() && y >= r.getMinY() && z <= r.getMaxMbrZ() && z >= r.getMinMbrZ()) {
+        regions.values().forEach(r -> {
+            if (r.getMaxMbrX() <= region.getMaxMbrX() &&
+                    r.getMaxY() <= region.getMaxY() &&
+                    r.getMaxMbrZ() <= region.getMaxMbrZ() &&
+                    r.getMinMbrX() >= region.getMinMbrX() &&
+                    r.getMinY() >= region.getMinY() &&
+                    r.getMinMbrZ() >= region.getMinMbrZ()) {
                 regionl.add(r);
             }
-        }
+        });
+        return regionl;
+    }
+
+    @Override
+    public Set<Region> getRegions(int x, int y, int z) {
+        Set<Region> regionl = new HashSet<>();
+        regions.values().forEach(r -> {
+            if (x <= r.getMaxMbrX() &&
+                    x >= r.getMinMbrX() &&
+                    y <= r.getMaxY() &&
+                    y >= r.getMinY() &&
+                    z <= r.getMaxMbrZ() &&
+                    z >= r.getMinMbrZ()) {
+                regionl.add(r);
+            }
+        });
         return regionl;
     }
 

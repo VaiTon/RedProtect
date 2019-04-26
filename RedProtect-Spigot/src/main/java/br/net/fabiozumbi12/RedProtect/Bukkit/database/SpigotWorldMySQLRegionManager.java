@@ -40,7 +40,7 @@ import java.sql.*;
 import java.util.*;
 
 @SuppressWarnings("deprecation")
-public class WorldMySQLRegionManager implements WorldRegionManager {
+public class SpigotWorldMySQLRegionManager implements SpigotWorldRegionManager {
 
     private final String url = "jdbc:mysql://" + RedProtect.get().config.configRoot().mysql.host + "/";
     private final String reconnect = "?autoReconnect=true";
@@ -50,7 +50,7 @@ public class WorldMySQLRegionManager implements WorldRegionManager {
     private final World world;
     private Connection dbcon;
 
-    public WorldMySQLRegionManager(World world) throws SQLException {
+    public SpigotWorldMySQLRegionManager(World world) throws SQLException {
         super();
         this.regions = new HashMap<>();
         this.world = world;
