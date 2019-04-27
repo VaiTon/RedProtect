@@ -58,8 +58,8 @@ public class SpigotWorldFlatFileRegionManager implements SpigotWorldRegionManage
             if (!RedProtect.get().config.configRoot().file_type.equals("mysql")) {
                 if (RedProtect.get().config.configRoot().flat_file.region_per_file) {
                     File f = new File(RedProtect.get().getDataFolder(), "data" + File.separator + world);
-                    if (!f.exists()) {
-                        f.mkdir();
+                    if (!f.exists() && !f.mkdirs()) {
+                        RedProtect.get().logger.severe("Could not create directory " + f.getCanonicalPath());
                     }
                     File[] listOfFiles = f.listFiles();
                     for (File region : listOfFiles) {
@@ -70,8 +70,8 @@ public class SpigotWorldFlatFileRegionManager implements SpigotWorldRegionManage
                 } else {
                     File oldf = new File(RedProtect.get().getDataFolder(), "data" + File.separator + world + ".yml");
                     File newf = new File(RedProtect.get().getDataFolder(), "data" + File.separator + "data_" + world + ".yml");
-                    if (oldf.exists()) {
-                        oldf.renameTo(newf);
+                    if (oldf.exists() && !oldf.renameTo(newf)) {
+                        RedProtect.get().logger.severe("Could not rename " + oldf.getCanonicalPath() + " to " + newf.getCanonicalPath());
                     }
                     this.load(RedProtect.get().getDataFolder() + File.separator + "data" + File.separator + "data_" + world + ".yml");
                 }
@@ -84,13 +84,12 @@ public class SpigotWorldFlatFileRegionManager implements SpigotWorldRegionManage
 
     private void load(String path) {
         File f = new File(path);
-        if (!f.exists()) {
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
 
         if (!RedProtect.get().config.configRoot().file_type.equals("mysql")) {
             YamlConfiguration fileDB = new YamlConfiguration();
